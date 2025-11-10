@@ -2,11 +2,13 @@ package com.synapseguard.vpn.di
 
 import android.content.Context
 import com.synapseguard.vpn.data.repository.AuthRepositoryImpl
+import com.synapseguard.vpn.data.repository.BillingRepositoryImpl
 import com.synapseguard.vpn.data.repository.ServerRepositoryImpl
 import com.synapseguard.vpn.data.repository.SettingsRepositoryImpl
 import com.synapseguard.vpn.data.repository.SubscriptionRepositoryImpl
 import com.synapseguard.vpn.data.repository.VpnRepositoryImpl
 import com.synapseguard.vpn.domain.repository.AuthRepository
+import com.synapseguard.vpn.domain.repository.BillingRepository
 import com.synapseguard.vpn.domain.repository.ServerRepository
 import com.synapseguard.vpn.domain.repository.SettingsRepository
 import com.synapseguard.vpn.domain.repository.SubscriptionRepository
@@ -82,4 +84,10 @@ abstract class RepositoryModule {
     abstract fun bindSubscriptionRepository(
         subscriptionRepositoryImpl: SubscriptionRepositoryImpl
     ): SubscriptionRepository
+
+    @Binds
+    @Singleton
+    abstract fun bindBillingRepository(
+        billingRepositoryImpl: BillingRepositoryImpl
+    ): BillingRepository
 }
