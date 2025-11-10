@@ -63,6 +63,15 @@ fun HomeScreen(
                     }
                 },
                 actions = {
+                    // Refresh server latencies button
+                    IconButton(onClick = { viewModel.refreshServerLatencies() }) {
+                        Icon(
+                            Icons.Default.Refresh,
+                            contentDescription = "Refresh Server Latencies",
+                            tint = IconPrimary
+                        )
+                    }
+
                     IconButton(onClick = onNavigateToStats) {
                         Icon(
                             Icons.Default.BarChart,

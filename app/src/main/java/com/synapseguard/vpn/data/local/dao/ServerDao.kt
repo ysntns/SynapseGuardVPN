@@ -31,6 +31,12 @@ interface ServerDao {
     @Query("UPDATE servers SET isFavorite = :isFavorite WHERE id = :serverId")
     suspend fun updateFavoriteStatus(serverId: String, isFavorite: Boolean)
 
+    @Query("UPDATE servers SET latency = :latency WHERE id = :serverId")
+    suspend fun updateLatency(serverId: String, latency: Int)
+
+    @Query("SELECT * FROM servers")
+    fun observeAllServers(): Flow<List<ServerEntity>>
+
     @Delete
     suspend fun deleteServer(server: ServerEntity)
 

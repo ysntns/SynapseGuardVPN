@@ -32,7 +32,8 @@ class HomeViewModel @Inject constructor(
     private val disconnectVpnUseCase: DisconnectVpnUseCase,
     observeVpnStateUseCase: ObserveVpnStateUseCase,
     observeConnectionStatsUseCase: ObserveConnectionStatsUseCase,
-    private val settingsRepository: com.synapseguard.vpn.domain.repository.SettingsRepository
+    private val settingsRepository: com.synapseguard.vpn.domain.repository.SettingsRepository,
+    private val serverRepository: com.synapseguard.vpn.domain.repository.ServerRepository
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(HomeUiState())
@@ -131,5 +132,29 @@ class HomeViewModel @Inject constructor(
 
     fun clearError() {
         _uiState.value = _uiState.value.copy(error = null)
+    }
+
+    fun refreshServerLatencies() {
+        viewModelScope.launch {
+            Timber.d("Refreshing server latencies")
+            serverRepository.refreshServerLatencies()
+                .onSuccess { servers ->
+                    Timber.d("Successfully refreshed latencies for ${servers.size} servers")
+                    // Update selected server if its latency changed
+                    val currentSelectedId = _uiState.value.selectedServer?.id
+                    if (currentSelectedId != null) {
+                        val updatedServer = servers.find { it.id == currentSelectedId }
+                        if (updatedServer != null) {
+                            _uiState.value = _uiState.value.copy(selectedServer = updatedServer)
+                        }
+                    }
+                }
+                .onFailure { error ->
+                    Timber.e(error, "Failed to refresh server latencies")
+                    _uiState.value = _uiState.value.copy(
+                        error = "Failed to refresh server latencies: ${error.message}"
+                    )
+                }
+        }
     }
 }

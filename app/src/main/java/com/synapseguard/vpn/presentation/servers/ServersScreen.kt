@@ -1,5 +1,7 @@
 package com.synapseguard.vpn.presentation.servers
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -12,134 +14,25 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.synapseguard.vpn.domain.model.VpnProtocol
-import com.synapseguard.vpn.domain.model.VpnServer
+import androidx.hilt.navigation.compose.hiltViewModel
 import com.synapseguard.vpn.presentation.components.ServerListItem
 import com.synapseguard.vpn.presentation.theme.*
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ServersScreen(
-    onNavigateBack: () -> Unit
+    onNavigateBack: () -> Unit,
+    viewModel: ServersViewModel = hiltViewModel()
 ) {
-    var selectedServer by remember { mutableStateOf<String?>(null) }
+    val uiState by viewModel.uiState.collectAsState()
+    var showSortMenu by remember { mutableStateOf(false) }
 
-    // Mock server data - Comprehensive server list
-    val mockServers = remember {
-        listOf(
-            // Europe
-            VpnServer(
-                id = "de-fra-1",
-                name = "Frankfurt",
-                country = "Germany",
-                countryCode = "DE",
-                city = "Frankfurt",
-                ipAddress = "192.168.1.1",
-                port = 51820,
-                protocol = VpnProtocol.WIREGUARD,
-                latency = 22,
-                load = 15
-            ),
-            VpnServer(
-                id = "fr-par-1",
-                name = "Paris",
-                country = "France",
-                countryCode = "FR",
-                city = "Paris",
-                ipAddress = "192.168.1.2",
-                port = 51820,
-                protocol = VpnProtocol.WIREGUARD,
-                latency = 28,
-                load = 22
-            ),
-            VpnServer(
-                id = "uk-lon-1",
-                name = "London",
-                country = "United Kingdom",
-                countryCode = "GB",
-                city = "London",
-                ipAddress = "192.168.1.3",
-                port = 51820,
-                protocol = VpnProtocol.WIREGUARD,
-                latency = 40,
-                load = 35
-            ),
-            VpnServer(
-                id = "tr-ist-1",
-                name = "Istanbul",
-                country = "Turkey",
-                countryCode = "TR",
-                city = "Istanbul",
-                ipAddress = "192.168.1.4",
-                port = 51820,
-                protocol = VpnProtocol.WIREGUARD,
-                latency = 35,
-                load = 45
-            ),
-            // Americas
-            VpnServer(
-                id = "ca-tor-1",
-                name = "Toronto",
-                country = "Canada",
-                countryCode = "CA",
-                city = "Toronto",
-                ipAddress = "192.168.1.5",
-                port = 51820,
-                protocol = VpnProtocol.WIREGUARD,
-                latency = 45,
-                load = 50
-            ),
-            VpnServer(
-                id = "us-ny-1",
-                name = "New York",
-                country = "United States",
-                countryCode = "US",
-                city = "New York",
-                ipAddress = "192.168.1.6",
-                port = 51820,
-                protocol = VpnProtocol.WIREGUARD,
-                latency = 50,
-                load = 60
-            ),
-            // Asia-Pacific
-            VpnServer(
-                id = "jp-tok-1",
-                name = "Tokyo",
-                country = "Japan",
-                countryCode = "JP",
-                city = "Tokyo",
-                ipAddress = "192.168.1.7",
-                port = 51820,
-                protocol = VpnProtocol.WIREGUARD,
-                latency = 88,
-                load = 25
-            ),
-            VpnServer(
-                id = "sg-sin-1",
-                name = "Singapore",
-                country = "Singapore",
-                countryCode = "SG",
-                city = "Singapore",
-                ipAddress = "192.168.1.8",
-                port = 51820,
-                protocol = VpnProtocol.WIREGUARD,
-                latency = 65,
-                load = 30
-            ),
-            // Middle East
-            VpnServer(
-                id = "ae-dub-1",
-                name = "Dubai",
-                country = "UAE",
-                countryCode = "AE",
-                city = "Dubai",
-                ipAddress = "192.168.1.9",
-                port = 51820,
-                protocol = VpnProtocol.WIREGUARD,
-                latency = 55,
-                load = 20
-            )
-        )
+    // Show snackbar for errors
+    LaunchedEffect(uiState.error) {
+        uiState.error?.let {
+            // Snackbar will be handled by MainActivity's SnackbarHost
+            viewModel.clearError()
+        }
     }
 
     Scaffold(
@@ -147,12 +40,119 @@ fun ServersScreen(
         topBar = {
             TopAppBar(
                 title = {
-                    Text(
-                        "Select Server",
-                        color = TextPrimary
-                    )
+                    Column {
+                        Text(
+                            "Select Server",
+                            color = TextPrimary
+                        )
+                        if (uiState.servers.isNotEmpty()) {
+                            Text(
+                                "${uiState.servers.size} servers available",
+                                fontSize = 12.sp,
+                                color = TextSecondary
+                            )
+                        }
+                    }
                 },
                 actions = {
+                    // Loading indicator
+                    AnimatedVisibility(visible = uiState.isRefreshingLatencies) {
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(24.dp),
+                            color = CyanPrimary,
+                            strokeWidth = 2.dp
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                    }
+
+                    // Refresh latencies button
+                    IconButton(onClick = { viewModel.refreshLatencies() }) {
+                        Icon(
+                            Icons.Default.Refresh,
+                            contentDescription = "Refresh Latencies",
+                            tint = IconPrimary
+                        )
+                    }
+
+                    // Sort menu
+                    Box {
+                        IconButton(onClick = { showSortMenu = true }) {
+                            Icon(
+                                Icons.Default.Sort,
+                                contentDescription = "Sort",
+                                tint = IconPrimary
+                            )
+                        }
+
+                        DropdownMenu(
+                            expanded = showSortMenu,
+                            onDismissRequest = { showSortMenu = false },
+                            modifier = Modifier.background(BackgroundSecondary)
+                        ) {
+                            DropdownMenuItem(
+                                text = {
+                                    Text(
+                                        "Default",
+                                        color = if (uiState.sortOrder == ServerSortOrder.DEFAULT) CyanPrimary else TextPrimary
+                                    )
+                                },
+                                onClick = {
+                                    viewModel.setSortOrder(ServerSortOrder.DEFAULT)
+                                    showSortMenu = false
+                                }
+                            )
+                            DropdownMenuItem(
+                                text = {
+                                    Text(
+                                        "Latency (Low to High)",
+                                        color = if (uiState.sortOrder == ServerSortOrder.LATENCY_ASC) CyanPrimary else TextPrimary
+                                    )
+                                },
+                                onClick = {
+                                    viewModel.setSortOrder(ServerSortOrder.LATENCY_ASC)
+                                    showSortMenu = false
+                                }
+                            )
+                            DropdownMenuItem(
+                                text = {
+                                    Text(
+                                        "Latency (High to Low)",
+                                        color = if (uiState.sortOrder == ServerSortOrder.LATENCY_DESC) CyanPrimary else TextPrimary
+                                    )
+                                },
+                                onClick = {
+                                    viewModel.setSortOrder(ServerSortOrder.LATENCY_DESC)
+                                    showSortMenu = false
+                                }
+                            )
+                            DropdownMenuItem(
+                                text = {
+                                    Text(
+                                        "Name (A-Z)",
+                                        color = if (uiState.sortOrder == ServerSortOrder.NAME_ASC) CyanPrimary else TextPrimary
+                                    )
+                                },
+                                onClick = {
+                                    viewModel.setSortOrder(ServerSortOrder.NAME_ASC)
+                                    showSortMenu = false
+                                }
+                            )
+                            DropdownMenuItem(
+                                text = {
+                                    Text(
+                                        "Load (Low to High)",
+                                        color = if (uiState.sortOrder == ServerSortOrder.LOAD_ASC) CyanPrimary else TextPrimary
+                                    )
+                                },
+                                onClick = {
+                                    viewModel.setSortOrder(ServerSortOrder.LOAD_ASC)
+                                    showSortMenu = false
+                                }
+                            )
+                        }
+                    }
+
+                    // Search button
                     IconButton(onClick = { /* TODO: Search */ }) {
                         Icon(
                             Icons.Default.Search,
@@ -213,7 +213,8 @@ fun ServersScreen(
                         }
 
                         FilledTonalButton(
-                            onClick = { /* TODO: Auto-select best server */ },
+                            onClick = { viewModel.selectBestServer() },
+                            enabled = !uiState.isRefreshingLatencies && uiState.servers.isNotEmpty(),
                             colors = ButtonDefaults.filledTonalButtonColors(
                                 containerColor = CyanPrimary.copy(alpha = 0.2f),
                                 contentColor = CyanPrimary
@@ -237,15 +238,48 @@ fun ServersScreen(
             }
 
             // Server list
-            items(mockServers) { server ->
+            items(
+                items = uiState.servers,
+                key = { server -> server.id }
+            ) { server ->
                 ServerListItem(
                     server = server,
-                    isSelected = selectedServer == server.id,
+                    isSelected = uiState.selectedServer?.id == server.id,
                     onClick = {
-                        selectedServer = server.id
-                        // TODO: Update selected server in ViewModel
+                        viewModel.selectServer(server)
                     }
                 )
+            }
+
+            // Empty state
+            if (uiState.servers.isEmpty() && !uiState.isLoading) {
+                item {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 32.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        Icon(
+                            Icons.Default.CloudOff,
+                            contentDescription = null,
+                            tint = TextSecondary,
+                            modifier = Modifier.size(64.dp)
+                        )
+                        Spacer(modifier = Modifier.height(16.dp))
+                        Text(
+                            "No servers available",
+                            color = TextPrimary,
+                            fontSize = 18.sp,
+                            fontWeight = FontWeight.Bold
+                        )
+                        Text(
+                            "Pull to refresh",
+                            color = TextSecondary,
+                            fontSize = 14.sp
+                        )
+                    }
+                }
             }
 
             item { Spacer(modifier = Modifier.height(16.dp)) }
