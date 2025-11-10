@@ -30,6 +30,12 @@ class VpnRepositoryImpl @Inject constructor(
     private var stateMonitorJob: Job? = null
     private var currentConfig: ConnectionConfig? = null
 
+    // For speed calculation
+    private var lastBytesReceived = 0L
+    private var lastBytesSent = 0L
+    private var lastStatsUpdateTime = 0L
+    private var sessionStartTime = 0L
+
     override fun observeVpnState(): Flow<VpnState> = _vpnState.asStateFlow()
 
     override fun observeConnectionStats(): Flow<ConnectionStats> = _connectionStats.asStateFlow()
@@ -118,6 +124,12 @@ class VpnRepositoryImpl @Inject constructor(
             _connectionStats.value = ConnectionStats()
             currentConfig = null
 
+            // Reset speed tracking
+            lastBytesReceived = 0L
+            lastBytesSent = 0L
+            lastStatsUpdateTime = 0L
+            sessionStartTime = 0L
+
             Timber.d("VPN disconnected")
             Result.success(Unit)
         } catch (e: Exception) {
@@ -179,6 +191,12 @@ class VpnRepositoryImpl @Inject constructor(
 
     private fun startStatsMonitoring() {
         repositoryScope.launch {
+            // Initialize session start time
+            sessionStartTime = System.currentTimeMillis()
+            lastStatsUpdateTime = sessionStartTime
+            lastBytesReceived = 0L
+            lastBytesSent = 0L
+
             while (isActive && _vpnState.value is VpnState.Connected) {
                 try {
                     // Get stats from service
@@ -193,12 +211,37 @@ class VpnRepositoryImpl @Inject constructor(
                         if (statsFlow != null && statsFlow is kotlinx.coroutines.flow.StateFlow<*>) {
                             val stats = statsFlow.value
                             if (stats is com.synapseguard.vpn.service.core.ConnectionStats) {
-                                // Convert service stats to domain stats
+                                val currentTime = System.currentTimeMillis()
+                                val timeDiffSeconds = (currentTime - lastStatsUpdateTime) / 1000.0
+
+                                // Calculate speeds (bytes per second)
+                                val downloadSpeedBps = if (timeDiffSeconds > 0 && lastStatsUpdateTime > 0) {
+                                    ((stats.bytesReceived - lastBytesReceived) / timeDiffSeconds).toLong()
+                                } else {
+                                    0L
+                                }
+
+                                val uploadSpeedBps = if (timeDiffSeconds > 0 && lastStatsUpdateTime > 0) {
+                                    ((stats.bytesSent - lastBytesSent) / timeDiffSeconds).toLong()
+                                } else {
+                                    0L
+                                }
+
+                                // Update tracking variables
+                                lastBytesReceived = stats.bytesReceived
+                                lastBytesSent = stats.bytesSent
+                                lastStatsUpdateTime = currentTime
+
+                                // Convert service stats to domain stats with speed tracking
                                 _connectionStats.value = ConnectionStats(
                                     bytesReceived = stats.bytesReceived,
                                     bytesSent = stats.bytesSent,
-                                    packetsReceived = stats.packetsReceived,
-                                    packetsSent = stats.packetsSent
+                                    downloadSpeedBps = downloadSpeedBps.coerceAtLeast(0L),
+                                    uploadSpeedBps = uploadSpeedBps.coerceAtLeast(0L),
+                                    sessionStartTime = sessionStartTime,
+                                    duration = if (sessionStartTime > 0) {
+                                        currentTime - sessionStartTime
+                                    } else 0L
                                 )
                             }
                         }

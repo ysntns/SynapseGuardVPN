@@ -83,6 +83,13 @@ fun StatsScreen(
                 )
             }
 
+            // Real-time Speed Graph
+            item {
+                RealTimeSpeedGraphCard(
+                    speedHistory = uiState.speedHistory
+                )
+            }
+
             // Data Usage Graph
             item {
                 DataUsageGraphCard(
@@ -306,6 +313,180 @@ private fun SpeedBar(
                     .fillMaxWidth(progress)
                     .fillMaxHeight()
                     .androidx.compose.foundation.background(color)
+            )
+        }
+    }
+}
+
+@Composable
+private fun RealTimeSpeedGraphCard(
+    speedHistory: List<SpeedHistoryPoint>
+) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(
+            containerColor = BackgroundCard
+        )
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(20.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp)
+        ) {
+            Text(
+                text = "Real-Time Speed (Last 60s)",
+                fontSize = 18.sp,
+                fontWeight = FontWeight.Bold,
+                color = TextPrimary
+            )
+
+            // Legend
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Box(
+                        modifier = Modifier
+                            .size(12.dp)
+                            .androidx.compose.foundation.background(ChartDownload)
+                    )
+                    Spacer(modifier = Modifier.width(4.dp))
+                    Text(
+                        text = "Download",
+                        fontSize = 12.sp,
+                        color = TextSecondary
+                    )
+                }
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Box(
+                        modifier = Modifier
+                            .size(12.dp)
+                            .androidx.compose.foundation.background(ChartUpload)
+                    )
+                    Spacer(modifier = Modifier.width(4.dp))
+                    Text(
+                        text = "Upload",
+                        fontSize = 12.sp,
+                        color = TextSecondary
+                    )
+                }
+            }
+
+            // Real-time line chart
+            if (speedHistory.isNotEmpty()) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(180.dp)
+                ) {
+                    RealTimeSpeedChart(speedHistory = speedHistory)
+                }
+            } else {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(180.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = "Connect to VPN to see live speed data",
+                        fontSize = 14.sp,
+                        color = TextSecondary
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun RealTimeSpeedChart(speedHistory: List<SpeedHistoryPoint>) {
+    Canvas(modifier = Modifier.fillMaxSize()) {
+        if (speedHistory.size < 2) return@Canvas
+
+        val maxSpeed = speedHistory.maxOfOrNull {
+            maxOf(it.downloadSpeedMbps, it.uploadSpeedMbps)
+        }?.coerceAtLeast(1.0) ?: 1.0
+
+        val width = size.width
+        val height = size.height
+        val spacing = width / (speedHistory.size - 1).coerceAtLeast(1)
+
+        // Draw grid lines
+        val gridColor = BackgroundSecondary
+        for (i in 0..4) {
+            val y = height * i / 4
+            drawLine(
+                color = gridColor,
+                start = Offset(0f, y),
+                end = Offset(width, y),
+                strokeWidth = 1.dp.toPx()
+            )
+        }
+
+        // Draw download speed path
+        val downloadPath = Path().apply {
+            speedHistory.forEachIndexed { index, point ->
+                val x = index * spacing
+                val y = height - (point.downloadSpeedMbps.toFloat() / maxSpeed.toFloat() * height)
+
+                if (index == 0) {
+                    moveTo(x, y)
+                } else {
+                    lineTo(x, y)
+                }
+            }
+        }
+
+        drawPath(
+            path = downloadPath,
+            color = ChartDownload,
+            style = Stroke(width = 3.dp.toPx(), cap = StrokeCap.Round)
+        )
+
+        // Draw upload speed path
+        val uploadPath = Path().apply {
+            speedHistory.forEachIndexed { index, point ->
+                val x = index * spacing
+                val y = height - (point.uploadSpeedMbps.toFloat() / maxSpeed.toFloat() * height)
+
+                if (index == 0) {
+                    moveTo(x, y)
+                } else {
+                    lineTo(x, y)
+                }
+            }
+        }
+
+        drawPath(
+            path = uploadPath,
+            color = ChartUpload,
+            style = Stroke(width = 3.dp.toPx(), cap = StrokeCap.Round)
+        )
+
+        // Draw points for download
+        speedHistory.forEachIndexed { index, point ->
+            val x = index * spacing
+            val yDownload = height - (point.downloadSpeedMbps.toFloat() / maxSpeed.toFloat() * height)
+
+            drawCircle(
+                color = ChartDownload,
+                radius = 3.dp.toPx(),
+                center = Offset(x, yDownload)
+            )
+        }
+
+        // Draw points for upload
+        speedHistory.forEachIndexed { index, point ->
+            val x = index * spacing
+            val yUpload = height - (point.uploadSpeedMbps.toFloat() / maxSpeed.toFloat() * height)
+
+            drawCircle(
+                color = ChartUpload,
+                radius = 3.dp.toPx(),
+                center = Offset(x, yUpload)
             )
         }
     }
