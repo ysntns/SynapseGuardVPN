@@ -23,8 +23,19 @@ SynapseGuard VPN is a modern, secure VPN application for Android built with the 
   - BCI Neural Latency monitoring
   - Interactive speed test
 - ✅ Enhanced Home Screen with connection management
+  - Shield icon in circular connection button
+  - Status-based color changes
+  - Connection state animations
 - ✅ Server selection screen with AI-optimized suggestions
+  - 9 servers across Europe, Americas, Asia-Pacific, and Middle East
+  - Real latency and load indicators
+  - Flag emojis for countries
 - ✅ Settings screen with security features
+- ✅ **Split Tunneling Screen** (NEW!)
+  - Per-app VPN bypass configuration
+  - Installed apps list with icons
+  - Toggle switches for each app
+  - Search functionality
 - ✅ Dark theme with cyan accents (#00D9FF)
 - ✅ Custom logo and branding assets
 
@@ -42,9 +53,9 @@ SynapseGuard VPN is a modern, secure VPN application for Android built with the 
 - 🔄 OpenVPN protocol implementation
 - 🔄 V2Ray protocol implementation
 
-### Planned Security Features
-- 🔄 Kill Switch (system-level traffic blocking)
-- 🔄 Split Tunneling (per-app VPN routing)
+### Security Features
+- ✅ Split Tunneling UI (per-app VPN routing ready)
+- 🔄 Kill Switch implementation (system-level traffic blocking)
 - 🔄 DNS Leak Protection
 - 🔄 Auto-connect on startup
 - 🔄 Always-on VPN support
@@ -147,13 +158,14 @@ Contributions are welcome! Please feel free to submit a Pull Request.
 
 ## Roadmap
 
-### Version 0.5 (Current - UI Complete) ✅
+### Version 0.6 (Current - Full UI Complete) ✅
 - [x] Animated Splash Screen
-- [x] Enhanced Home Screen with connection UI
+- [x] Enhanced Home Screen with shield icon
 - [x] Statistics Screen with metrics visualization
-- [x] Server Selection Screen
+- [x] Server Selection Screen (9 servers)
 - [x] Settings Screen
-- [x] Navigation system
+- [x] **Split Tunneling Screen** (NEW)
+- [x] 6-screen navigation system
 - [x] Dark theme with BCI-optimized colors
 - [x] Custom logo and branding
 
@@ -165,8 +177,8 @@ Contributions are welcome! Please feel free to submit a Pull Request.
 
 ### Version 1.1
 - [ ] OpenVPN support
-- [ ] Kill Switch implementation
-- [ ] Split Tunneling
+- [ ] Kill Switch backend implementation
+- [ ] Split Tunneling backend (UI already complete)
 - [ ] DNS Leak Protection
 
 ### Version 2.0
