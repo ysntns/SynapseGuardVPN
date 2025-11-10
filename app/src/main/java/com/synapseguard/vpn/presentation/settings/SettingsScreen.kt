@@ -13,6 +13,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.synapseguard.vpn.presentation.auth.AuthViewModel
 import com.synapseguard.vpn.presentation.components.SettingsActionItem
 import com.synapseguard.vpn.presentation.components.SettingsToggleItem
 import com.synapseguard.vpn.presentation.theme.*
@@ -22,9 +23,12 @@ import com.synapseguard.vpn.presentation.theme.*
 fun SettingsScreen(
     onNavigateBack: () -> Unit,
     onNavigateToSplitTunnel: () -> Unit = {},
-    viewModel: SettingsViewModel = hiltViewModel()
+    onNavigateToLogin: () -> Unit = {},
+    viewModel: SettingsViewModel = hiltViewModel(),
+    authViewModel: AuthViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
+    val authState by authViewModel.uiState.collectAsState()
 
     Scaffold(
         containerColor = BackgroundPrimary,
@@ -157,6 +161,81 @@ fun SettingsScreen(
                     iconTint = IconAccent,
                     onClick = { /* TODO: Show about screen */ }
                 )
+            }
+
+            // Account Section
+            if (authState.isAuthenticated) {
+                item {
+                    Spacer(modifier = Modifier.height(8.dp))
+                    SectionHeader(title = "Account")
+                }
+
+                item {
+                    Card(
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = CardDefaults.cardColors(
+                            containerColor = BackgroundSecondary
+                        )
+                    ) {
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(16.dp),
+                            verticalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.spacedBy(12.dp)
+                            ) {
+                                Icon(
+                                    Icons.Default.AccountCircle,
+                                    contentDescription = null,
+                                    tint = CyanPrimary,
+                                    modifier = Modifier.size(24.dp)
+                                )
+                                Column {
+                                    Text(
+                                        text = authState.currentUser?.name ?: "User",
+                                        fontSize = 16.sp,
+                                        fontWeight = FontWeight.SemiBold,
+                                        color = TextPrimary
+                                    )
+                                    Text(
+                                        text = authState.currentUser?.email ?: "",
+                                        fontSize = 14.sp,
+                                        color = TextSecondary
+                                    )
+                                    Text(
+                                        text = "Subscription: ${authState.currentUser?.subscriptionTier?.name ?: "FREE"}",
+                                        fontSize = 12.sp,
+                                        color = CyanPrimary
+                                    )
+                                }
+                            }
+                        }
+                    }
+                }
+
+                item {
+                    Button(
+                        onClick = {
+                            authViewModel.logout()
+                            onNavigateToLogin()
+                        },
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = StatusDisconnected,
+                            contentColor = TextPrimary
+                        )
+                    ) {
+                        Icon(
+                            Icons.Default.Logout,
+                            contentDescription = "Logout"
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text("Logout")
+                    }
+                }
             }
 
             item { Spacer(modifier = Modifier.height(16.dp)) }

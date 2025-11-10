@@ -17,6 +17,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.synapseguard.vpn.R
+import com.synapseguard.vpn.presentation.auth.AuthViewModel
 import com.synapseguard.vpn.presentation.theme.*
 import kotlinx.coroutines.delay
 
@@ -26,8 +27,10 @@ import kotlinx.coroutines.delay
  */
 @Composable
 fun SplashScreen(
-    onSplashFinished: () -> Unit
+    onSplashFinished: (Boolean) -> Unit,
+    authViewModel: AuthViewModel
 ) {
+    val authState by authViewModel.uiState.collectAsState()
     // Animation states
     val infiniteTransition = rememberInfiniteTransition(label = "splash_glow")
 
@@ -69,7 +72,7 @@ fun SplashScreen(
 
         // Wait before navigating
         delay(2000)
-        onSplashFinished()
+        onSplashFinished(authState.isAuthenticated)
     }
 
     Box(
