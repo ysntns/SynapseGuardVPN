@@ -36,15 +36,6 @@ fun SettingsScreen(
                         color = TextPrimary
                     )
                 },
-                navigationIcon = {
-                    IconButton(onClick = onNavigateBack) {
-                        Icon(
-                            Icons.Default.ArrowBack,
-                            contentDescription = "Back",
-                            tint = IconPrimary
-                        )
-                    }
-                },
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = BackgroundSecondary
                 )

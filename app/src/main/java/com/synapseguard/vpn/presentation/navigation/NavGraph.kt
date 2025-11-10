@@ -1,6 +1,8 @@
 package com.synapseguard.vpn.presentation.navigation
 
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -12,7 +14,10 @@ import com.synapseguard.vpn.presentation.splittunnel.SplitTunnelScreen
 import com.synapseguard.vpn.presentation.stats.StatsScreen
 
 @Composable
-fun NavGraph(navController: NavHostController) {
+fun NavGraph(
+    navController: NavHostController,
+    snackbarHostState: SnackbarHostState
+) {
     NavHost(
         navController = navController,
         startDestination = Screen.Splash.route
@@ -40,7 +45,8 @@ fun NavGraph(navController: NavHostController) {
                 },
                 onNavigateToStats = {
                     navController.navigate(Screen.Stats.route)
-                }
+                },
+                snackbarHostState = snackbarHostState
             )
         }
 

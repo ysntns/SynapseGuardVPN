@@ -152,15 +152,6 @@ fun ServersScreen(
                         color = TextPrimary
                     )
                 },
-                navigationIcon = {
-                    IconButton(onClick = onNavigateBack) {
-                        Icon(
-                            Icons.Default.ArrowBack,
-                            contentDescription = "Back",
-                            tint = IconPrimary
-                        )
-                    }
-                },
                 actions = {
                     IconButton(onClick = { /* TODO: Search */ }) {
                         Icon(
