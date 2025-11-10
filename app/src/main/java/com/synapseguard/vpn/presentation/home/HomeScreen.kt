@@ -2,8 +2,7 @@ package com.synapseguard.vpn.presentation.home
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Settings
-import androidx.compose.material.icons.filled.VpnKey
+import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -12,11 +11,13 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.synapseguard.vpn.domain.model.VpnState
-import com.synapseguard.vpn.presentation.theme.VpnConnected
-import com.synapseguard.vpn.presentation.theme.VpnConnecting
-import com.synapseguard.vpn.presentation.theme.VpnDisconnected
+import com.synapseguard.vpn.presentation.components.CircularConnectionButton
+import com.synapseguard.vpn.presentation.components.ServerInfoCard
+import com.synapseguard.vpn.presentation.components.StatsCard
+import com.synapseguard.vpn.presentation.theme.*
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -28,14 +29,13 @@ fun HomeScreen(
     val uiState by viewModel.uiState.collectAsState()
 
     Scaffold(
-        topBar = {
-            TopAppBar(
-                title = { Text("SynapseGuard VPN") },
-                actions = {
-                    IconButton(onClick = onNavigateToSettings) {
-                        Icon(Icons.Default.Settings, contentDescription = "Settings")
-                    }
-                }
+        containerColor = BackgroundPrimary,
+        bottomBar = {
+            BottomNavigationBar(
+                selectedIndex = 0,
+                onHomeClick = { /* Already on home */ },
+                onServersClick = onNavigateToServers,
+                onSettingsClick = onNavigateToSettings
             )
         }
     ) { paddingValues ->
@@ -43,83 +43,30 @@ fun HomeScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(paddingValues)
-                .padding(16.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(24.dp)
+                .padding(horizontal = 20.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Spacer(modifier = Modifier.height(32.dp))
 
-            // VPN Status Icon
-            Icon(
-                imageVector = Icons.Default.VpnKey,
-                contentDescription = "VPN Status",
-                modifier = Modifier.size(120.dp),
-                tint = when (uiState.vpnState) {
-                    is VpnState.Connected -> VpnConnected
-                    is VpnState.Connecting, is VpnState.Disconnecting -> VpnConnecting
-                    else -> VpnDisconnected
-                }
-            )
-
-            // VPN Status Text
+            // App Title
             Text(
-                text = getStatusText(uiState.vpnState),
-                style = MaterialTheme.typography.headlineMedium,
-                fontWeight = FontWeight.Bold
+                text = "SynapseGuard",
+                fontSize = 28.sp,
+                fontWeight = FontWeight.Bold,
+                color = TextPrimary
             )
 
-            // Connection Info
-            if (uiState.vpnState is VpnState.Connected) {
-                val connectedState = uiState.vpnState as VpnState.Connected
-                Card(
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Column(
-                        modifier = Modifier.padding(16.dp),
-                        verticalArrangement = Arrangement.spacedBy(8.dp)
-                    ) {
-                        Text(
-                            text = "Connected to:",
-                            style = MaterialTheme.typography.labelMedium
-                        )
-                        Text(
-                            text = connectedState.server.name,
-                            style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.Bold
-                        )
-                        Text(
-                            text = "${connectedState.server.city}, ${connectedState.server.country}",
-                            style = MaterialTheme.typography.bodyMedium
-                        )
-                    }
-                }
+            Text(
+                text = "BCI-Optimized Secure VPN",
+                fontSize = 14.sp,
+                color = TextSecondary
+            )
 
-                // Connection Stats
-                Card(
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(16.dp),
-                        horizontalArrangement = Arrangement.SpaceEvenly
-                    ) {
-                        StatItem(
-                            label = "Download",
-                            value = formatBytes(uiState.connectionStats.bytesReceived)
-                        )
-                        StatItem(
-                            label = "Upload",
-                            value = formatBytes(uiState.connectionStats.bytesSent)
-                        )
-                    }
-                }
-            }
+            Spacer(modifier = Modifier.height(40.dp))
 
-            Spacer(modifier = Modifier.weight(1f))
-
-            // Connect/Disconnect Button
-            Button(
+            // Circular Connection Button
+            CircularConnectionButton(
+                vpnState = uiState.vpnState,
                 onClick = {
                     when (uiState.vpnState) {
                         is VpnState.Connected -> viewModel.onDisconnectClick()
@@ -127,54 +74,88 @@ fun HomeScreen(
                         else -> {}
                     }
                 },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(56.dp),
-                enabled = !uiState.isLoading,
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = when (uiState.vpnState) {
-                        is VpnState.Connected -> VpnDisconnected
-                        else -> VpnConnected
-                    }
+                modifier = Modifier.padding(vertical = 24.dp)
+            )
+
+            // Status Text
+            Text(
+                text = getStatusText(uiState.vpnState),
+                fontSize = 16.sp,
+                fontWeight = FontWeight.Medium,
+                color = getStatusColor(uiState.vpnState)
+            )
+
+            Spacer(modifier = Modifier.height(32.dp))
+
+            // Server Info Card
+            val isConnected = uiState.vpnState is VpnState.Connected
+            val server = (uiState.vpnState as? VpnState.Connected)?.server
+                ?: uiState.selectedServer
+
+            if (server != null) {
+                ServerInfoCard(
+                    serverName = server.name,
+                    location = "${server.city}, ${server.country}",
+                    pingOrIp = if (isConnected) {
+                        "${server.latency}ms"
+                    } else {
+                        server.ipAddress
+                    },
+                    isConnected = isConnected
                 )
-            ) {
-                if (uiState.isLoading) {
-                    CircularProgressIndicator(
-                        modifier = Modifier.size(24.dp),
-                        color = MaterialTheme.colorScheme.onPrimary
-                    )
-                } else {
-                    Text(
-                        text = when (uiState.vpnState) {
-                            is VpnState.Connected -> "Disconnect"
-                            else -> "Connect"
-                        },
-                        style = MaterialTheme.typography.titleMedium
-                    )
-                }
+            } else {
+                // Default server card when no server is selected
+                ServerInfoCard(
+                    serverName = "No Server Selected",
+                    location = "Tap to select a server",
+                    pingOrIp = "--",
+                    isConnected = false,
+                    modifier = Modifier.clickable(onClick = onNavigateToServers)
+                )
             }
 
-            // Server Selection Button
-            OutlinedButton(
-                onClick = onNavigateToServers,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(56.dp)
-            ) {
-                Text("Select Server")
+            // Connection Stats (only when connected)
+            if (uiState.vpnState is VpnState.Connected) {
+                Spacer(modifier = Modifier.height(16.dp))
+
+                StatsCard(
+                    downloadSpeed = formatBytes(uiState.connectionStats.bytesReceived),
+                    uploadSpeed = formatBytes(uiState.connectionStats.bytesSent)
+                )
             }
 
-            // Error Snackbar
+            Spacer(modifier = Modifier.weight(1f))
+
+            // Error message
             uiState.error?.let { error ->
-                Snackbar(
-                    modifier = Modifier.padding(8.dp),
-                    action = {
-                        TextButton(onClick = { viewModel.clearError() }) {
-                            Text("Dismiss")
+                Card(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(bottom = 16.dp),
+                    colors = CardDefaults.cardColors(
+                        containerColor = StatusDisconnected.copy(alpha = 0.2f)
+                    )
+                ) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(12.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = error,
+                            color = StatusDisconnected,
+                            modifier = Modifier.weight(1f)
+                        )
+                        IconButton(onClick = { viewModel.clearError() }) {
+                            Icon(
+                                Icons.Default.Close,
+                                contentDescription = "Dismiss",
+                                tint = StatusDisconnected
+                            )
                         }
                     }
-                ) {
-                    Text(error)
                 }
             }
         }
@@ -182,27 +163,92 @@ fun HomeScreen(
 }
 
 @Composable
-private fun StatItem(label: String, value: String) {
-    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-        Text(
-            text = value,
-            style = MaterialTheme.typography.titleLarge,
-            fontWeight = FontWeight.Bold
+private fun BottomNavigationBar(
+    selectedIndex: Int,
+    onHomeClick: () -> Unit,
+    onServersClick: () -> Unit,
+    onSettingsClick: () -> Unit
+) {
+    NavigationBar(
+        containerColor = BackgroundSecondary,
+        contentColor = TextPrimary
+    ) {
+        NavigationBarItem(
+            selected = selectedIndex == 0,
+            onClick = onHomeClick,
+            icon = {
+                Icon(
+                    Icons.Default.Home,
+                    contentDescription = "Home"
+                )
+            },
+            label = { Text("Home") },
+            colors = NavigationBarItemDefaults.colors(
+                selectedIconColor = AccentPrimary,
+                selectedTextColor = AccentPrimary,
+                unselectedIconColor = TextSecondary,
+                unselectedTextColor = TextSecondary,
+                indicatorColor = SurfaceSelected
+            )
         )
-        Text(
-            text = label,
-            style = MaterialTheme.typography.bodySmall
+
+        NavigationBarItem(
+            selected = selectedIndex == 1,
+            onClick = onServersClick,
+            icon = {
+                Icon(
+                    Icons.Default.Storage,
+                    contentDescription = "Servers"
+                )
+            },
+            label = { Text("Servers") },
+            colors = NavigationBarItemDefaults.colors(
+                selectedIconColor = AccentPrimary,
+                selectedTextColor = AccentPrimary,
+                unselectedIconColor = TextSecondary,
+                unselectedTextColor = TextSecondary,
+                indicatorColor = SurfaceSelected
+            )
+        )
+
+        NavigationBarItem(
+            selected = selectedIndex == 2,
+            onClick = onSettingsClick,
+            icon = {
+                Icon(
+                    Icons.Default.Settings,
+                    contentDescription = "Settings"
+                )
+            },
+            label = { Text("Settings") },
+            colors = NavigationBarItemDefaults.colors(
+                selectedIconColor = AccentPrimary,
+                selectedTextColor = AccentPrimary,
+                unselectedIconColor = TextSecondary,
+                unselectedTextColor = TextSecondary,
+                indicatorColor = SurfaceSelected
+            )
         )
     }
 }
 
 private fun getStatusText(state: VpnState): String {
     return when (state) {
-        is VpnState.Idle -> "Not Connected"
-        is VpnState.Connecting -> "Connecting..."
-        is VpnState.Connected -> "Connected"
+        is VpnState.Idle -> "Tap to connect"
+        is VpnState.Connecting -> "Establishing secure connection..."
+        is VpnState.Connected -> "Your connection is secure"
         is VpnState.Disconnecting -> "Disconnecting..."
-        is VpnState.Error -> "Connection Error"
+        is VpnState.Error -> "Connection failed"
+    }
+}
+
+private fun getStatusColor(state: VpnState): androidx.compose.ui.graphics.Color {
+    return when (state) {
+        is VpnState.Idle -> TextSecondary
+        is VpnState.Connecting -> StatusConnecting
+        is VpnState.Connected -> StatusConnected
+        is VpnState.Disconnecting -> StatusWarning
+        is VpnState.Error -> StatusDisconnected
     }
 }
 
