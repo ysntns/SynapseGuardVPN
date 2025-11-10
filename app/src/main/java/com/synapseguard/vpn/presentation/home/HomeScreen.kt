@@ -184,8 +184,8 @@ private fun BottomNavigationBar(
             },
             label = { Text("Home") },
             colors = NavigationBarItemDefaults.colors(
-                selectedIconColor = AccentPrimary,
-                selectedTextColor = AccentPrimary,
+                selectedIconColor = CyanPrimary,
+                selectedTextColor = CyanPrimary,
                 unselectedIconColor = TextSecondary,
                 unselectedTextColor = TextSecondary,
                 indicatorColor = SurfaceSelected
@@ -203,8 +203,8 @@ private fun BottomNavigationBar(
             },
             label = { Text("Servers") },
             colors = NavigationBarItemDefaults.colors(
-                selectedIconColor = AccentPrimary,
-                selectedTextColor = AccentPrimary,
+                selectedIconColor = CyanPrimary,
+                selectedTextColor = CyanPrimary,
                 unselectedIconColor = TextSecondary,
                 unselectedTextColor = TextSecondary,
                 indicatorColor = SurfaceSelected
@@ -222,8 +222,8 @@ private fun BottomNavigationBar(
             },
             label = { Text("Settings") },
             colors = NavigationBarItemDefaults.colors(
-                selectedIconColor = AccentPrimary,
-                selectedTextColor = AccentPrimary,
+                selectedIconColor = CyanPrimary,
+                selectedTextColor = CyanPrimary,
                 unselectedIconColor = TextSecondary,
                 unselectedTextColor = TextSecondary,
                 indicatorColor = SurfaceSelected
@@ -247,7 +247,7 @@ private fun getStatusColor(state: VpnState): androidx.compose.ui.graphics.Color 
         is VpnState.Idle -> TextSecondary
         is VpnState.Connecting -> StatusConnecting
         is VpnState.Connected -> StatusConnected
-        is VpnState.Disconnecting -> StatusWarning
+        is VpnState.Disconnecting -> StatusConnecting
         is VpnState.Error -> StatusDisconnected
     }
 }
