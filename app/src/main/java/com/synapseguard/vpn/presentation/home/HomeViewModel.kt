@@ -58,8 +58,13 @@ class HomeViewModel @Inject constructor(
 
     fun onConnectClick() {
         // Request VPN permission first
-        com.synapseguard.vpn.presentation.MainActivity.requestVpnPermissionStatic {
-            // Permission granted, proceed with connection
+        try {
+            com.synapseguard.vpn.presentation.MainActivity.requestVpnPermissionStatic {
+                // Permission granted, proceed with connection
+                connectToVpn()
+            }
+        } catch (e: Exception) {
+            // Fallback: just try to connect directly
             connectToVpn()
         }
     }
@@ -68,21 +73,32 @@ class HomeViewModel @Inject constructor(
         viewModelScope.launch {
             val currentState = _uiState.value
             val server = currentState.selectedServer ?: run {
-                // Use a default server for demo purposes
+                // Use Frankfurt server as default
                 VpnServer(
-                    id = "demo-1",
-                    name = "Demo Server",
-                    country = "United States",
-                    countryCode = "US",
-                    city = "New York",
-                    ipAddress = "192.168.1.1",
+                    id = "de-frankfurt",
+                    name = "Germany - Frankfurt",
+                    country = "Germany",
+                    countryCode = "DE",
+                    city = "Frankfurt",
+                    ipAddress = "185.223.95.120",  // Example IP
                     port = 51820,
-                    protocol = com.synapseguard.vpn.domain.model.VpnProtocol.WIREGUARD
+                    protocol = com.synapseguard.vpn.domain.model.VpnProtocol.WIREGUARD,
+                    latency = 28,
+                    load = 35
                 )
             }
 
             Timber.d("Connecting to ${server.name}")
-            val config = ConnectionConfig(server = server)
+
+            // Build connection config with settings
+            val config = ConnectionConfig(
+                server = server,
+                enableKillSwitch = false,  // Can be read from settings
+                enableSplitTunneling = false,  // Can be read from settings
+                excludedApps = emptyList(),  // Can be read from split tunnel settings
+                dns = listOf("1.1.1.1", "1.0.0.1")
+            )
+
             connectVpnUseCase(config).onFailure { error ->
                 _uiState.value = _uiState.value.copy(
                     error = error.message ?: "Connection failed"
