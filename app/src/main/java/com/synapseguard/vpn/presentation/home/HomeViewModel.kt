@@ -31,7 +31,8 @@ class HomeViewModel @Inject constructor(
     private val connectVpnUseCase: ConnectVpnUseCase,
     private val disconnectVpnUseCase: DisconnectVpnUseCase,
     observeVpnStateUseCase: ObserveVpnStateUseCase,
-    observeConnectionStatsUseCase: ObserveConnectionStatsUseCase
+    observeConnectionStatsUseCase: ObserveConnectionStatsUseCase,
+    private val settingsRepository: com.synapseguard.vpn.domain.repository.SettingsRepository
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(HomeUiState())
@@ -90,14 +91,24 @@ class HomeViewModel @Inject constructor(
 
             Timber.d("Connecting to ${server.name}")
 
-            // Build connection config with settings
+            // Get current settings from repository
+            val settings = try {
+                settingsRepository.getSettings()
+            } catch (e: Exception) {
+                Timber.w(e, "Failed to get settings, using defaults")
+                com.synapseguard.vpn.domain.model.VpnSettings()
+            }
+
+            // Build connection config with settings from SettingsRepository
             val config = ConnectionConfig(
                 server = server,
-                enableKillSwitch = false,  // Can be read from settings
-                enableSplitTunneling = false,  // Can be read from settings
-                excludedApps = emptyList(),  // Can be read from split tunnel settings
-                dns = listOf("1.1.1.1", "1.0.0.1")
+                enableKillSwitch = settings.killSwitch,
+                enableSplitTunneling = settings.splitTunneling,
+                excludedApps = settings.excludedApps.toList(),
+                dns = if (settings.customDns.isNotEmpty()) settings.customDns else listOf("1.1.1.1", "1.0.0.1")
             )
+
+            Timber.d("VPN Config: killSwitch=${config.enableKillSwitch}, splitTunneling=${config.enableSplitTunneling}, excludedApps=${config.excludedApps.size}")
 
             connectVpnUseCase(config).onFailure { error ->
                 _uiState.value = _uiState.value.copy(
