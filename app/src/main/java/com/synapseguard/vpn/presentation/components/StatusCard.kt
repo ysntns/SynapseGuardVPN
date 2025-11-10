@@ -109,7 +109,7 @@ fun ServerInfoCard(
                     text = pingOrIp,
                     fontSize = 16.sp,
                     fontWeight = FontWeight.Bold,
-                    color = if (isConnected) AccentPrimary else TextPrimary
+                    color = if (isConnected) CyanPrimary else TextPrimary
                 )
             }
         }

@@ -149,7 +149,7 @@ fun CircularConnectionButton(
 
             val backgroundColor = when (buttonState) {
                 ConnectionButtonState.DISCONNECTED -> BackgroundSecondary
-                ConnectionButtonState.CONNECTING -> BackgroundTertiary
+                ConnectionButtonState.CONNECTING -> BackgroundCard
                 ConnectionButtonState.CONNECTED -> BackgroundSecondary
             }
 

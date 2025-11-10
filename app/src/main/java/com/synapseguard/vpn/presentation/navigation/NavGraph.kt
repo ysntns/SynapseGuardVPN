@@ -7,13 +7,28 @@ import androidx.navigation.compose.composable
 import com.synapseguard.vpn.presentation.home.HomeScreen
 import com.synapseguard.vpn.presentation.servers.ServersScreen
 import com.synapseguard.vpn.presentation.settings.SettingsScreen
+import com.synapseguard.vpn.presentation.splash.SplashScreen
+import com.synapseguard.vpn.presentation.stats.StatsScreen
 
 @Composable
 fun NavGraph(navController: NavHostController) {
     NavHost(
         navController = navController,
-        startDestination = Screen.Home.route
+        startDestination = Screen.Splash.route
     ) {
+        composable(Screen.Splash.route) {
+            SplashScreen(
+                onSplashFinished = {
+                    navController.navigate(Screen.Home.route) {
+                        // Remove splash from back stack
+                        popUpTo(Screen.Splash.route) {
+                            inclusive = true
+                        }
+                    }
+                }
+            )
+        }
+
         composable(Screen.Home.route) {
             HomeScreen(
                 onNavigateToServers = {
@@ -21,6 +36,9 @@ fun NavGraph(navController: NavHostController) {
                 },
                 onNavigateToSettings = {
                     navController.navigate(Screen.Settings.route)
+                },
+                onNavigateToStats = {
+                    navController.navigate(Screen.Stats.route)
                 }
             )
         }
@@ -35,6 +53,14 @@ fun NavGraph(navController: NavHostController) {
 
         composable(Screen.Settings.route) {
             SettingsScreen(
+                onNavigateBack = {
+                    navController.popBackStack()
+                }
+            )
+        }
+
+        composable(Screen.Stats.route) {
+            StatsScreen(
                 onNavigateBack = {
                     navController.popBackStack()
                 }

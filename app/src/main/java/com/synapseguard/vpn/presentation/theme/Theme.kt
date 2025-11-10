@@ -19,24 +19,29 @@ import androidx.core.view.WindowCompat
  * SynapseGuard VPN Dark Color Scheme
  * Following the BCI-Optimized design system with deep blue/black backgrounds
  * and cyan accent colors for a futuristic, secure aesthetic.
+ *
+ * Uses exact colors from mockup design:
+ * - Background: #0A0E1A (primary), #141824 (secondary), #1A1F2E (cards)
+ * - Accent: #00D9FF (cyan primary), #00F0FF (cyan light)
+ * - Status: #FF3B5C (red), #00FF88 (green), #FFB800 (yellow)
  */
 private val SynapseGuardColorScheme = darkColorScheme(
-    // Primary colors - Cyan accent
-    primary = AccentPrimary,
+    // Primary colors - Cyan accent (#00D9FF)
+    primary = CyanPrimary,
     onPrimary = BackgroundPrimary,
-    primaryContainer = AccentTertiary,
+    primaryContainer = CyanDark,
     onPrimaryContainer = TextPrimary,
 
     // Secondary colors - Status indicators
     secondary = StatusConnected,
     onSecondary = BackgroundPrimary,
     secondaryContainer = StatusConnecting,
-    onSecondaryContainer = TextPrimary,
+    onSecondaryContainer = BackgroundPrimary,
 
     // Tertiary colors - Warning/Error states
     tertiary = StatusDisconnected,
     onTertiary = TextPrimary,
-    tertiaryContainer = StatusWarning,
+    tertiaryContainer = StatusConnecting,
     onTertiaryContainer = BackgroundPrimary,
 
     // Background colors
@@ -44,20 +49,20 @@ private val SynapseGuardColorScheme = darkColorScheme(
     onBackground = TextPrimary,
 
     // Surface colors
-    surface = BackgroundSecondary,
+    surface = BackgroundCard,
     onSurface = TextPrimary,
-    surfaceVariant = BackgroundTertiary,
+    surfaceVariant = BackgroundCardElevated,
     onSurfaceVariant = TextSecondary,
 
-    // Surface tint
-    surfaceTint = AccentPrimary,
+    // Surface tint - Use cyan for elevated surfaces
+    surfaceTint = CyanPrimary,
 
     // Inverse colors
     inverseSurface = TextPrimary,
     inverseOnSurface = BackgroundPrimary,
-    inversePrimary = AccentPrimary,
+    inversePrimary = CyanPrimary,
 
-    // Error colors
+    // Error colors - Red for errors/disconnected
     error = StatusDisconnected,
     onError = TextPrimary,
     errorContainer = StatusDisconnected,
@@ -67,7 +72,7 @@ private val SynapseGuardColorScheme = darkColorScheme(
     outline = BorderPrimary,
     outlineVariant = BorderAccent,
 
-    // Scrim
+    // Scrim - Dark overlay
     scrim = BackgroundPrimary
 )
 

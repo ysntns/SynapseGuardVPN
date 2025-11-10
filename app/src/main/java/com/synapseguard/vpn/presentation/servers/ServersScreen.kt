@@ -138,7 +138,7 @@ fun ServersScreen(
                 Card(
                     modifier = Modifier.fillMaxWidth(),
                     colors = CardDefaults.cardColors(
-                        containerColor = BackgroundTertiary
+                        containerColor = BackgroundCard
                     )
                 ) {
                     Row(
@@ -151,7 +151,7 @@ fun ServersScreen(
                         Icon(
                             Icons.Default.Psychology,
                             contentDescription = null,
-                            tint = AccentPrimary,
+                            tint = CyanPrimary,
                             modifier = Modifier.size(32.dp)
                         )
 
@@ -172,8 +172,8 @@ fun ServersScreen(
                         FilledTonalButton(
                             onClick = { /* TODO: Auto-select best server */ },
                             colors = ButtonDefaults.filledTonalButtonColors(
-                                containerColor = AccentPrimary.copy(alpha = 0.2f),
-                                contentColor = AccentPrimary
+                                containerColor = CyanPrimary.copy(alpha = 0.2f),
+                                contentColor = CyanPrimary
                             )
                         ) {
                             Text("Auto")

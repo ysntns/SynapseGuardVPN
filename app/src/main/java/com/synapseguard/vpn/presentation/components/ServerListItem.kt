@@ -96,7 +96,7 @@ fun ServerListItem(
                     Icon(
                         imageVector = Icons.Default.Check,
                         contentDescription = "Selected",
-                        tint = AccentPrimary,
+                        tint = CyanPrimary,
                         modifier = Modifier.size(24.dp)
                     )
                 }
@@ -122,7 +122,7 @@ private fun getFlagEmoji(countryCode: String): String {
 private fun getLoadColor(load: Int): androidx.compose.ui.graphics.Color {
     return when {
         load < 30 -> StatusConnected // Green - Low load
-        load < 70 -> StatusWarning // Yellow - Medium load
+        load < 70 -> StatusConnecting // Yellow - Medium load
         else -> StatusDisconnected // Red - High load
     }
 }

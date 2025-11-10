@@ -57,6 +57,14 @@ class HomeViewModel @Inject constructor(
     }
 
     fun onConnectClick() {
+        // Request VPN permission first
+        com.synapseguard.vpn.presentation.MainActivity.requestVpnPermissionStatic {
+            // Permission granted, proceed with connection
+            connectToVpn()
+        }
+    }
+
+    private fun connectToVpn() {
         viewModelScope.launch {
             val currentState = _uiState.value
             val server = currentState.selectedServer ?: run {

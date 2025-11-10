@@ -1,5 +1,6 @@
 package com.synapseguard.vpn.presentation.home
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
@@ -24,12 +25,44 @@ import com.synapseguard.vpn.presentation.theme.*
 fun HomeScreen(
     onNavigateToServers: () -> Unit,
     onNavigateToSettings: () -> Unit,
+    onNavigateToStats: () -> Unit = {},
     viewModel: HomeViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
 
     Scaffold(
         containerColor = BackgroundPrimary,
+        topBar = {
+            TopAppBar(
+                title = {
+                    Column {
+                        Text(
+                            text = "SynapseGuard",
+                            fontSize = 20.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = TextPrimary
+                        )
+                        Text(
+                            text = "BCI-Optimized Secure VPN",
+                            fontSize = 12.sp,
+                            color = TextSecondary
+                        )
+                    }
+                },
+                actions = {
+                    IconButton(onClick = onNavigateToStats) {
+                        Icon(
+                            Icons.Default.BarChart,
+                            contentDescription = "Statistics",
+                            tint = IconPrimary
+                        )
+                    }
+                },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = BackgroundSecondary
+                )
+            )
+        },
         bottomBar = {
             BottomNavigationBar(
                 selectedIndex = 0,
@@ -46,23 +79,7 @@ fun HomeScreen(
                 .padding(horizontal = 20.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Spacer(modifier = Modifier.height(32.dp))
-
-            // App Title
-            Text(
-                text = "SynapseGuard",
-                fontSize = 28.sp,
-                fontWeight = FontWeight.Bold,
-                color = TextPrimary
-            )
-
-            Text(
-                text = "BCI-Optimized Secure VPN",
-                fontSize = 14.sp,
-                color = TextSecondary
-            )
-
-            Spacer(modifier = Modifier.height(40.dp))
+            Spacer(modifier = Modifier.height(16.dp))
 
             // Circular Connection Button
             CircularConnectionButton(
@@ -184,8 +201,8 @@ private fun BottomNavigationBar(
             },
             label = { Text("Home") },
             colors = NavigationBarItemDefaults.colors(
-                selectedIconColor = AccentPrimary,
-                selectedTextColor = AccentPrimary,
+                selectedIconColor = CyanPrimary,
+                selectedTextColor = CyanPrimary,
                 unselectedIconColor = TextSecondary,
                 unselectedTextColor = TextSecondary,
                 indicatorColor = SurfaceSelected
@@ -203,8 +220,8 @@ private fun BottomNavigationBar(
             },
             label = { Text("Servers") },
             colors = NavigationBarItemDefaults.colors(
-                selectedIconColor = AccentPrimary,
-                selectedTextColor = AccentPrimary,
+                selectedIconColor = CyanPrimary,
+                selectedTextColor = CyanPrimary,
                 unselectedIconColor = TextSecondary,
                 unselectedTextColor = TextSecondary,
                 indicatorColor = SurfaceSelected
@@ -222,8 +239,8 @@ private fun BottomNavigationBar(
             },
             label = { Text("Settings") },
             colors = NavigationBarItemDefaults.colors(
-                selectedIconColor = AccentPrimary,
-                selectedTextColor = AccentPrimary,
+                selectedIconColor = CyanPrimary,
+                selectedTextColor = CyanPrimary,
                 unselectedIconColor = TextSecondary,
                 unselectedTextColor = TextSecondary,
                 indicatorColor = SurfaceSelected
@@ -247,7 +264,7 @@ private fun getStatusColor(state: VpnState): androidx.compose.ui.graphics.Color 
         is VpnState.Idle -> TextSecondary
         is VpnState.Connecting -> StatusConnecting
         is VpnState.Connected -> StatusConnected
-        is VpnState.Disconnecting -> StatusWarning
+        is VpnState.Disconnecting -> StatusConnecting
         is VpnState.Error -> StatusDisconnected
     }
 }

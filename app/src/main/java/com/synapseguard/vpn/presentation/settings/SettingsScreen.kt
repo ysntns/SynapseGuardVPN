@@ -205,7 +205,7 @@ private fun ProtocolSelectionCard(
             Icon(
                 Icons.Default.Psychology,
                 contentDescription = null,
-                tint = AccentPrimary,
+                tint = CyanPrimary,
                 modifier = Modifier.size(24.dp)
             )
 
