@@ -8,6 +8,7 @@ import com.synapseguard.vpn.presentation.home.HomeScreen
 import com.synapseguard.vpn.presentation.servers.ServersScreen
 import com.synapseguard.vpn.presentation.settings.SettingsScreen
 import com.synapseguard.vpn.presentation.splash.SplashScreen
+import com.synapseguard.vpn.presentation.splittunnel.SplitTunnelScreen
 import com.synapseguard.vpn.presentation.stats.StatsScreen
 
 @Composable
@@ -55,12 +56,23 @@ fun NavGraph(navController: NavHostController) {
             SettingsScreen(
                 onNavigateBack = {
                     navController.popBackStack()
+                },
+                onNavigateToSplitTunnel = {
+                    navController.navigate(Screen.SplitTunnel.route)
                 }
             )
         }
 
         composable(Screen.Stats.route) {
             StatsScreen(
+                onNavigateBack = {
+                    navController.popBackStack()
+                }
+            )
+        }
+
+        composable(Screen.SplitTunnel.route) {
+            SplitTunnelScreen(
                 onNavigateBack = {
                     navController.popBackStack()
                 }

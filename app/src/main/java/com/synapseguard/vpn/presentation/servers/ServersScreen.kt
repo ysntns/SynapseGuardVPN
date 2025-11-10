@@ -24,56 +24,95 @@ fun ServersScreen(
 ) {
     var selectedServer by remember { mutableStateOf<String?>(null) }
 
-    // Mock server data - Replace with actual data from ViewModel
+    // Mock server data - Comprehensive server list
     val mockServers = remember {
         listOf(
+            // Europe
             VpnServer(
-                id = "us-ny-1",
-                name = "US East",
-                country = "United States",
-                countryCode = "US",
-                city = "New York",
+                id = "de-fra-1",
+                name = "Frankfurt",
+                country = "Germany",
+                countryCode = "DE",
+                city = "Frankfurt",
                 ipAddress = "192.168.1.1",
                 port = 51820,
                 protocol = VpnProtocol.WIREGUARD,
-                latency = 45,
-                load = 25
+                latency = 22,
+                load = 15
             ),
             VpnServer(
-                id = "uk-lon-1",
-                name = "UK London",
-                country = "United Kingdom",
-                countryCode = "GB",
-                city = "London",
+                id = "fr-par-1",
+                name = "Paris",
+                country = "France",
+                countryCode = "FR",
+                city = "Paris",
                 ipAddress = "192.168.1.2",
                 port = 51820,
                 protocol = VpnProtocol.WIREGUARD,
-                latency = 78,
-                load = 60
+                latency = 28,
+                load = 22
             ),
             VpnServer(
-                id = "de-ber-1",
-                name = "Germany",
-                country = "Germany",
-                countryCode = "DE",
-                city = "Berlin",
+                id = "uk-lon-1",
+                name = "London",
+                country = "United Kingdom",
+                countryCode = "GB",
+                city = "London",
                 ipAddress = "192.168.1.3",
                 port = 51820,
                 protocol = VpnProtocol.WIREGUARD,
-                latency = 52,
+                latency = 40,
                 load = 35
             ),
             VpnServer(
-                id = "jp-tok-1",
-                name = "Japan",
-                country = "Japan",
-                countryCode = "JP",
-                city = "Tokyo",
+                id = "tr-ist-1",
+                name = "Istanbul",
+                country = "Turkey",
+                countryCode = "TR",
+                city = "Istanbul",
                 ipAddress = "192.168.1.4",
                 port = 51820,
                 protocol = VpnProtocol.WIREGUARD,
-                latency = 125,
-                load = 80
+                latency = 35,
+                load = 45
+            ),
+            // Americas
+            VpnServer(
+                id = "ca-tor-1",
+                name = "Toronto",
+                country = "Canada",
+                countryCode = "CA",
+                city = "Toronto",
+                ipAddress = "192.168.1.5",
+                port = 51820,
+                protocol = VpnProtocol.WIREGUARD,
+                latency = 45,
+                load = 50
+            ),
+            VpnServer(
+                id = "us-ny-1",
+                name = "New York",
+                country = "United States",
+                countryCode = "US",
+                city = "New York",
+                ipAddress = "192.168.1.6",
+                port = 51820,
+                protocol = VpnProtocol.WIREGUARD,
+                latency = 50,
+                load = 60
+            ),
+            // Asia-Pacific
+            VpnServer(
+                id = "jp-tok-1",
+                name = "Tokyo",
+                country = "Japan",
+                countryCode = "JP",
+                city = "Tokyo",
+                ipAddress = "192.168.1.7",
+                port = 51820,
+                protocol = VpnProtocol.WIREGUARD,
+                latency = 88,
+                load = 25
             ),
             VpnServer(
                 id = "sg-sin-1",
@@ -81,11 +120,24 @@ fun ServersScreen(
                 country = "Singapore",
                 countryCode = "SG",
                 city = "Singapore",
-                ipAddress = "192.168.1.5",
+                ipAddress = "192.168.1.8",
                 port = 51820,
                 protocol = VpnProtocol.WIREGUARD,
-                latency = 95,
-                load = 45
+                latency = 65,
+                load = 30
+            ),
+            // Middle East
+            VpnServer(
+                id = "ae-dub-1",
+                name = "Dubai",
+                country = "UAE",
+                countryCode = "AE",
+                city = "Dubai",
+                ipAddress = "192.168.1.9",
+                port = 51820,
+                protocol = VpnProtocol.WIREGUARD,
+                latency = 55,
+                load = 20
             )
         )
     }

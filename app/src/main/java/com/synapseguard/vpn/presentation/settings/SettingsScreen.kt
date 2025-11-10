@@ -21,6 +21,7 @@ import com.synapseguard.vpn.presentation.theme.*
 @Composable
 fun SettingsScreen(
     onNavigateBack: () -> Unit,
+    onNavigateToSplitTunnel: () -> Unit = {},
     viewModel: SettingsViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
@@ -76,13 +77,12 @@ fun SettingsScreen(
             }
 
             item {
-                SettingsToggleItem(
+                SettingsActionItem(
                     title = "Split Tunneling",
                     description = "Choose apps to bypass VPN",
-                    icon = Icons.Default.SwapHoriz,
-                    iconTint = IconBlue,
-                    checked = uiState.settings.splitTunneling,
-                    onCheckedChange = { viewModel.updateSplitTunneling(it) }
+                    icon = Icons.Default.CallSplit,
+                    iconTint = CyanPrimary,
+                    onClick = onNavigateToSplitTunnel
                 )
             }
 
