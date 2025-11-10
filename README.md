@@ -13,24 +13,41 @@ SynapseGuard VPN is a modern, secure VPN application for Android built with the 
 
 ## Features
 
-### Current
+### Current UI & UX
 - ✅ Modern Material3 UI with Jetpack Compose
+- ✅ Animated Splash Screen with BCI-optimized branding
+- ✅ Statistics Screen with real-time metrics
+  - Circular speed gauge
+  - Download/upload speed visualization
+  - Data usage graphs (30-day history)
+  - BCI Neural Latency monitoring
+  - Interactive speed test
+- ✅ Enhanced Home Screen with connection management
+- ✅ Server selection screen with AI-optimized suggestions
+- ✅ Settings screen with security features
+- ✅ Dark theme with cyan accents (#00D9FF)
+- ✅ Custom logo and branding assets
+
+### Architecture & Development
 - ✅ MVVM Architecture with Clean Architecture
 - ✅ Hilt Dependency Injection
 - ✅ Room Database for local storage
 - ✅ DataStore for preferences
 - ✅ Retrofit for network operations
 - ✅ Coroutines & Flow for async operations
+- ✅ Navigation Compose with multi-screen flow
 
-### Planned
-- 🔄 WireGuard protocol support
-- 🔄 OpenVPN protocol support
-- 🔄 V2Ray protocol support
-- 🔄 Kill Switch
-- 🔄 Split Tunneling
-- 🔄 Server selection with latency testing
-- 🔄 Connection statistics
+### Planned Protocol Support
+- 🔄 WireGuard protocol implementation
+- 🔄 OpenVPN protocol implementation
+- 🔄 V2Ray protocol implementation
+
+### Planned Security Features
+- 🔄 Kill Switch (system-level traffic blocking)
+- 🔄 Split Tunneling (per-app VPN routing)
+- 🔄 DNS Leak Protection
 - 🔄 Auto-connect on startup
+- 🔄 Always-on VPN support
 
 ## Tech Stack
 
@@ -130,21 +147,33 @@ Contributions are welcome! Please feel free to submit a Pull Request.
 
 ## Roadmap
 
-### Version 1.0
-- [ ] Basic VPN connectivity (WireGuard)
-- [ ] Server selection
-- [ ] Connection statistics
-- [ ] Settings management
+### Version 0.5 (Current - UI Complete) ✅
+- [x] Animated Splash Screen
+- [x] Enhanced Home Screen with connection UI
+- [x] Statistics Screen with metrics visualization
+- [x] Server Selection Screen
+- [x] Settings Screen
+- [x] Navigation system
+- [x] Dark theme with BCI-optimized colors
+- [x] Custom logo and branding
+
+### Version 1.0 (In Progress)
+- [ ] WireGuard protocol implementation
+- [ ] Basic VPN connectivity
+- [ ] Real-time connection statistics
+- [ ] Server latency testing
 
 ### Version 1.1
 - [ ] OpenVPN support
-- [ ] Kill Switch
+- [ ] Kill Switch implementation
 - [ ] Split Tunneling
+- [ ] DNS Leak Protection
 
 ### Version 2.0
 - [ ] V2Ray support
-- [ ] Advanced routing
-- [ ] Per-app VPN
+- [ ] Advanced routing options
+- [ ] Per-app VPN configuration
+- [ ] AI-enhanced server selection
 
 ## License
 
