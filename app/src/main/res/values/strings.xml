@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">SynapseGuard VPN</string>
+
+    <!-- Main Screen -->
+    <string name="connect">Connect</string>
+    <string name="disconnect">Disconnect</string>
+    <string name="connecting">Connecting…</string>
+    <string name="connected">Connected</string>
+    <string name="disconnected">Disconnected</string>
+
+    <!-- VPN Status -->
+    <string name="vpn_status_idle">Not Connected</string>
+    <string name="vpn_status_connecting">Connecting…</string>
+    <string name="vpn_status_connected">Connected</string>
+    <string name="vpn_status_disconnecting">Disconnecting…</string>
+    <string name="vpn_status_error">Connection Error</string>
+
+    <!-- Protocol Names -->
+    <string name="protocol_wireguard">WireGuard</string>
+    <string name="protocol_openvpn">OpenVPN</string>
+    <string name="protocol_v2ray">V2Ray</string>
+
+    <!-- Server Selection -->
+    <string name="select_server">Select Server</string>
+    <string name="server_location">Location</string>
+    <string name="server_latency">Latency</string>
+
+    <!-- Settings -->
+    <string name="settings">Settings</string>
+    <string name="kill_switch">Kill Switch</string>
+    <string name="kill_switch_desc">Block internet if VPN disconnects</string>
+    <string name="split_tunneling">Split Tunneling</string>
+    <string name="split_tunneling_desc">Choose apps to bypass VPN</string>
+    <string name="auto_connect">Auto Connect</string>
+    <string name="auto_connect_desc">Connect VPN on app start</string>
+
+    <!-- Notifications -->
+    <string name="notification_channel_vpn">VPN Connection</string>
+    <string name="notification_vpn_connected">VPN Connected</string>
+    <string name="notification_vpn_disconnected">VPN Disconnected</string>
+
+    <!-- Errors -->
+    <string name="error_vpn_permission">VPN permission required</string>
+    <string name="error_connection_failed">Connection failed</string>
+    <string name="error_server_unreachable">Server unreachable</string>
+    <string name="error_invalid_config">Invalid configuration</string>
+</resources>
