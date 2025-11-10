@@ -8,11 +8,13 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.synapseguard.vpn.domain.model.SubscriptionTier
 import com.synapseguard.vpn.presentation.auth.AuthViewModel
 import com.synapseguard.vpn.presentation.components.SettingsActionItem
 import com.synapseguard.vpn.presentation.components.SettingsToggleItem
@@ -170,6 +172,16 @@ fun SettingsScreen(
                     SectionHeader(title = "Account")
                 }
 
+                // Subscription Management Card
+                item {
+                    SubscriptionCard(
+                        isPremiumUser = authState.isPremiumUser,
+                        subscriptionTier = authState.subscriptionTier,
+                        onTogglePremium = { authViewModel.togglePremiumStatus() }
+                    )
+                }
+
+                // User Info Card
                 item {
                     Card(
                         modifier = Modifier.fillMaxWidth(),
@@ -204,11 +216,6 @@ fun SettingsScreen(
                                         text = authState.currentUser?.email ?: "",
                                         fontSize = 14.sp,
                                         color = TextSecondary
-                                    )
-                                    Text(
-                                        text = "Subscription: ${authState.currentUser?.subscriptionTier?.name ?: "FREE"}",
-                                        fontSize = 12.sp,
-                                        color = CyanPrimary
                                     )
                                 }
                             }
@@ -298,6 +305,111 @@ private fun ProtocolSelectionCard(
                 contentDescription = null,
                 tint = IconSecondary
             )
+        }
+    }
+}
+
+@Composable
+private fun SubscriptionCard(
+    isPremiumUser: Boolean,
+    subscriptionTier: SubscriptionTier,
+    onTogglePremium: () -> Unit
+) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(
+            containerColor = if (isPremiumUser) {
+                BackgroundAccent.copy(alpha = 0.2f)
+            } else {
+                BackgroundSecondary
+            }
+        )
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(12.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Icon(
+                        if (isPremiumUser) Icons.Default.WorkspacePremium else Icons.Default.StarBorder,
+                        contentDescription = null,
+                        tint = if (isPremiumUser) IconYellow else IconSecondary,
+                        modifier = Modifier.size(32.dp)
+                    )
+                    Column {
+                        Text(
+                            text = if (isPremiumUser) "Premium User" else "Free User",
+                            fontSize = 18.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = if (isPremiumUser) IconYellow else TextPrimary
+                        )
+                        Text(
+                            text = "Current: ${subscriptionTier.name}",
+                            fontSize = 14.sp,
+                            color = TextSecondary
+                        )
+                    }
+                }
+
+                // Demo toggle switch
+                Switch(
+                    checked = isPremiumUser,
+                    onCheckedChange = { onTogglePremium() },
+                    colors = SwitchDefaults.colors(
+                        checkedThumbColor = IconYellow,
+                        checkedTrackColor = IconYellow.copy(alpha = 0.5f),
+                        uncheckedThumbColor = IconSecondary,
+                        uncheckedTrackColor = BackgroundCard
+                    )
+                )
+            }
+
+            if (!isPremiumUser) {
+                HorizontalDivider(color = DividerColor)
+
+                Button(
+                    onClick = { /* TODO: Navigate to subscription/purchase screen */ },
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = IconYellow,
+                        contentColor = BackgroundPrimary
+                    )
+                ) {
+                    Icon(
+                        Icons.Default.Stars,
+                        contentDescription = null
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(
+                        text = "Upgrade to Premium",
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+
+                Text(
+                    text = "• Access to all premium servers\n• Priority connection speeds\n• Advanced security features\n• No ads",
+                    fontSize = 12.sp,
+                    color = TextSecondary,
+                    modifier = Modifier.padding(top = 4.dp)
+                )
+            } else {
+                Text(
+                    text = "✓ Premium features unlocked",
+                    fontSize = 14.sp,
+                    color = StatusConnected,
+                    fontWeight = FontWeight.Medium
+                )
+            }
         }
     }
 }

@@ -4,10 +4,12 @@ import android.content.Context
 import com.synapseguard.vpn.data.repository.AuthRepositoryImpl
 import com.synapseguard.vpn.data.repository.ServerRepositoryImpl
 import com.synapseguard.vpn.data.repository.SettingsRepositoryImpl
+import com.synapseguard.vpn.data.repository.SubscriptionRepositoryImpl
 import com.synapseguard.vpn.data.repository.VpnRepositoryImpl
 import com.synapseguard.vpn.domain.repository.AuthRepository
 import com.synapseguard.vpn.domain.repository.ServerRepository
 import com.synapseguard.vpn.domain.repository.SettingsRepository
+import com.synapseguard.vpn.domain.repository.SubscriptionRepository
 import com.synapseguard.vpn.domain.repository.VpnRepository
 import dagger.Binds
 import dagger.Module
@@ -74,4 +76,10 @@ abstract class RepositoryModule {
     abstract fun bindAuthRepository(
         authRepositoryImpl: AuthRepositoryImpl
     ): AuthRepository
+
+    @Binds
+    @Singleton
+    abstract fun bindSubscriptionRepository(
+        subscriptionRepositoryImpl: SubscriptionRepositoryImpl
+    ): SubscriptionRepository
 }

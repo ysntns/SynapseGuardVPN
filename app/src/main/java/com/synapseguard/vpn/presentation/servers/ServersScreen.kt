@@ -15,6 +15,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.synapseguard.vpn.presentation.auth.AuthViewModel
 import com.synapseguard.vpn.presentation.components.ServerListItem
 import com.synapseguard.vpn.presentation.theme.*
 
@@ -22,10 +23,14 @@ import com.synapseguard.vpn.presentation.theme.*
 @Composable
 fun ServersScreen(
     onNavigateBack: () -> Unit,
-    viewModel: ServersViewModel = hiltViewModel()
+    viewModel: ServersViewModel = hiltViewModel(),
+    authViewModel: AuthViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
+    val authState by authViewModel.uiState.collectAsState()
     var showSortMenu by remember { mutableStateOf(false) }
+
+    val snackbarHostState = remember { SnackbarHostState() }
 
     // Show snackbar for errors
     LaunchedEffect(uiState.error) {
@@ -37,6 +42,7 @@ fun ServersScreen(
 
     Scaffold(
         containerColor = BackgroundPrimary,
+        snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
             TopAppBar(
                 title = {
@@ -242,11 +248,24 @@ fun ServersScreen(
                 items = uiState.servers,
                 key = { server -> server.id }
             ) { server ->
+                val canAccess = !server.isPremium || authState.isPremiumUser
+
                 ServerListItem(
                     server = server,
                     isSelected = uiState.selectedServer?.id == server.id,
+                    canAccess = canAccess,
                     onClick = {
-                        viewModel.selectServer(server)
+                        if (canAccess) {
+                            viewModel.selectServer(server)
+                        } else {
+                            // Show snackbar for premium servers
+                            kotlinx.coroutines.GlobalScope.launch {
+                                snackbarHostState.showSnackbar(
+                                    message = "Upgrade to Premium to access this server",
+                                    duration = SnackbarDuration.Short
+                                )
+                            }
+                        }
                     }
                 )
             }
