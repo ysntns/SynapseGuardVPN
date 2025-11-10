@@ -33,14 +33,17 @@ class VpnRepositoryImpl @Inject constructor(
 
     override suspend fun connect(config: ConnectionConfig): Result<Unit> = withContext(ioDispatcher) {
         try {
-            // Check VPN permission
+            // Double-check VPN permission (should already be granted by MainActivity)
             val prepareIntent = VpnService.prepare(context)
             if (prepareIntent != null) {
+                Timber.w("VPN permission check failed - permission not granted")
+                _vpnState.value = VpnState.Error("VPN permission required. Please grant permission and try again.")
                 return@withContext Result.failure(
-                    SecurityException("VPN permission not granted")
+                    SecurityException("VPN permission not granted. Please grant permission and try again.")
                 )
             }
 
+            Timber.d("Starting VPN connection to ${config.server.name}")
             _vpnState.value = VpnState.Connecting
 
             // Start VPN service
@@ -54,12 +57,13 @@ class VpnRepositoryImpl @Inject constructor(
             context.startForegroundService(serviceIntent)
 
             // Simulate connection for now
+            // TODO: Wait for actual connection confirmation from VPN service
             _vpnState.value = VpnState.Connected(
                 server = config.server,
                 connectedAt = System.currentTimeMillis()
             )
 
-            Timber.d("VPN connected to ${config.server.name}")
+            Timber.d("VPN connected successfully to ${config.server.name}")
             Result.success(Unit)
         } catch (e: Exception) {
             Timber.e(e, "Failed to connect VPN")
