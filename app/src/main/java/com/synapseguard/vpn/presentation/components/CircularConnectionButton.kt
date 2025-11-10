@@ -5,6 +5,9 @@ import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Shield
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.*
@@ -166,25 +169,48 @@ fun CircularConnectionButton(
             )
         }
 
-        // Center text
+        // Center icon and text
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center
+            verticalArrangement = Arrangement.Center,
+            modifier = Modifier.padding(16.dp)
         ) {
-            val (text, color) = when (buttonState) {
-                ConnectionButtonState.DISCONNECTED -> "TAP TO\nCONNECT" to StatusDisconnected
-                ConnectionButtonState.CONNECTING -> "CONNECTING" to StatusConnecting
-                ConnectionButtonState.CONNECTED -> "CONNECTED" to StatusConnected
+            val (text, color, icon) = when (buttonState) {
+                ConnectionButtonState.DISCONNECTED -> Triple(
+                    "TAP TO\nCONNECT",
+                    StatusDisconnected,
+                    Icons.Default.Shield
+                )
+                ConnectionButtonState.CONNECTING -> Triple(
+                    "CONNECTING",
+                    StatusConnecting,
+                    Icons.Default.Shield
+                )
+                ConnectionButtonState.CONNECTED -> Triple(
+                    "CONNECTED",
+                    StatusConnected,
+                    Icons.Default.Shield
+                )
             }
+
+            // Shield icon
+            Icon(
+                imageVector = icon,
+                contentDescription = null,
+                tint = color,
+                modifier = Modifier.size(48.dp)
+            )
+
+            Spacer(modifier = Modifier.height(8.dp))
 
             Text(
                 text = text,
-                fontSize = 18.sp,
+                fontSize = 16.sp,
                 fontWeight = FontWeight.Bold,
                 color = color,
-                lineHeight = 24.sp,
+                lineHeight = 20.sp,
                 style = MaterialTheme.typography.titleMedium,
-                modifier = Modifier.padding(horizontal = 16.dp)
+                textAlign = androidx.compose.ui.text.style.TextAlign.Center
             )
         }
     }

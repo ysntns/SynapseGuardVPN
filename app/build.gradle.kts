@@ -108,6 +108,9 @@ dependencies {
     implementation("com.google.accompanist:accompanist-systemuicontroller:0.32.0")
     implementation("com.google.accompanist:accompanist-permissions:0.32.0")
 
+    // Timber for logging
+    implementation("com.jakewharton.timber:timber:5.0.1")
+
     // Testing
     testImplementation("junit:junit:4.13.2")
     androidTestImplementation("androidx.test.ext:junit:1.1.5")

@@ -3,6 +3,7 @@ package com.synapseguard.vpn.presentation.splash
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -10,9 +11,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.synapseguard.vpn.R
 import com.synapseguard.vpn.presentation.theme.*
 import kotlinx.coroutines.delay
 
@@ -86,8 +90,7 @@ fun SplashScreen(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(24.dp)
         ) {
-            // Logo placeholder (will be replaced with actual logo)
-            // For now, using text-based logo
+            // Logo with glow effect
             Box(
                 modifier = Modifier
                     .size(120.dp)
@@ -109,11 +112,12 @@ fun SplashScreen(
                         )
                 )
 
-                // Logo icon - Circuit brain shield
-                Text(
-                    text = "⚡",
-                    fontSize = 80.sp,
-                    color = CyanPrimary
+                // SynapseGuard Logo - Vector Drawable
+                Icon(
+                    painter = painterResource(id = R.drawable.ic_synapseguard_logo),
+                    contentDescription = "SynapseGuard Logo",
+                    modifier = Modifier.fillMaxSize(),
+                    tint = Color.Unspecified // Use original colors from drawable
                 )
             }
 
