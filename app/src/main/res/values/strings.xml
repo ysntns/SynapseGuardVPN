@@ -1,48 +1,123 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <!-- App Name -->
     <string name="app_name">SynapseGuard VPN</string>
 
-    <!-- Main Screen -->
+    <!-- Authentication -->
+    <string name="login">Login</string>
+    <string name="register">Register</string>
+    <string name="logout">Logout</string>
+    <string name="email">Email</string>
+    <string name="password">Password</string>
+    <string name="name">Name</string>
+    <string name="login_successful">Login successful</string>
+    <string name="login_failed">Login failed</string>
+    <string name="demo_login_hint">Demo: Use any email and password (6+ chars)</string>
+
+    <!-- Home Screen -->
     <string name="connect">Connect</string>
     <string name="disconnect">Disconnect</string>
-    <string name="connecting">Connecting…</string>
     <string name="connected">Connected</string>
     <string name="disconnected">Disconnected</string>
+    <string name="connecting">Connecting...</string>
+    <string name="disconnecting">Disconnecting...</string>
+    <string name="connection_secure">Your Connection is Secure</string>
+    <string name="connection_not_secure">Your Connection is Not Secure</string>
 
-    <!-- VPN Status -->
-    <string name="vpn_status_idle">Not Connected</string>
-    <string name="vpn_status_connecting">Connecting…</string>
-    <string name="vpn_status_connected">Connected</string>
-    <string name="vpn_status_disconnecting">Disconnecting…</string>
-    <string name="vpn_status_error">Connection Error</string>
+    <!-- Server Selection -->
+    <string name="select_server">Select Server</string>
+    <string name="all_servers">All Servers</string>
+    <string name="premium_server">Premium Server</string>
+    <string name="server_locked">Locked</string>
+    <string name="upgrade_to_premium">Upgrade to Premium</string>
+    <string name="ai_optimized_selection">AI-Optimized Selection</string>
+    <string name="based_on_latency">Based on latency, load, and location</string>
+    <string name="auto">Auto</string>
+
+    <!-- Statistics -->
+    <string name="stats">Statistics</string>
+    <string name="connection_stats">Connection Stats</string>
+    <string name="current_speed">Current Speed</string>
+    <string name="total_data_used">Total Data Used</string>
+    <string name="download">Download</string>
+    <string name="upload">Upload</string>
+    <string name="real_time_speed">Real-Time Speed (Last 60s)</string>
+    <string name="data_usage_this_month">Data Usage (This Month)</string>
+    <string name="bci_network_latency">BCI Network Latency</string>
+    <string name="neural_processing_optimized">Neural processing optimized</string>
+    <string name="speed_test">Speed Test</string>
+    <string name="run_speed_test">Run Speed Test</string>
+    <string name="running_test">Running Test...</string>
+    <string name="excellent">Excellent</string>
+    <string name="good">Good</string>
+    <string name="fair">Fair</string>
+
+    <!-- Settings -->
+    <string name="settings">Settings</string>
+    <string name="security_features">Security Features</string>
+    <string name="kill_switch">Kill Switch</string>
+    <string name="kill_switch_desc">Block internet if VPN disconnects</string>
+    <string name="split_tunneling">Split Tunneling</string>
+    <string name="split_tunneling_desc">Choose apps to bypass VPN</string>
+    <string name="dns_leak_protection">DNS Leak Protection</string>
+    <string name="dns_leak_desc">Prevent DNS queries from leaking</string>
+    <string name="connection_options">Connection Options</string>
+    <string name="auto_connect">Auto-Connect</string>
+    <string name="auto_connect_desc">Connect VPN automatically on app start</string>
+    <string name="auto_connect_on_boot">Auto-Connect on Boot</string>
+    <string name="auto_connect_on_boot_desc">Connect VPN when device starts</string>
+    <string name="vpn_protocol">VPN Protocol</string>
+    <string name="current_protocol">Current: %s</string>
+    <string name="advanced">Advanced</string>
+    <string name="send_diagnostic_logs">Send Diagnostic Logs</string>
+    <string name="send_logs_desc">Help us improve the app</string>
+    <string name="connection_log">Connection Log</string>
+    <string name="connection_log_desc">View detailed connection history</string>
+    <string name="about">About</string>
+    <string name="about_desc">Version 1.0.0 • BCI-Optimized VPN</string>
+
+    <!-- Subscription -->
+    <string name="subscription">Subscription</string>
+    <string name="premium_user">Premium User</string>
+    <string name="free_user">Free User</string>
+    <string name="current_tier">Current: %s</string>
+    <string name="premium_features">Premium Features</string>
+    <string name="premium_feature_1">• Access to all premium servers</string>
+    <string name="premium_feature_2">• Priority connection speeds</string>
+    <string name="premium_feature_3">• Advanced security features</string>
+    <string name="premium_feature_4">• No ads</string>
+    <string name="premium_unlocked">✓ Premium features unlocked</string>
+
+    <!-- Account -->
+    <string name="account">Account</string>
+    <string name="user">User</string>
+
+    <!-- Common -->
+    <string name="ok">OK</string>
+    <string name="cancel">Cancel</string>
+    <string name="back">Back</string>
+    <string name="loading">Loading...</string>
+    <string name="error">Error</string>
+    <string name="success">Success</string>
+    <string name="retry">Retry</string>
+    <string name="refresh">Refresh</string>
+
+    <!-- Errors -->
+    <string name="error_generic">An error occurred</string>
+    <string name="error_network">Network error</string>
+    <string name="error_permission">Permission required</string>
+    <string name="vpn_permission_required">VPN permission required</string>
+
+    <!-- Notifications -->
+    <string name="notification_channel_vpn">VPN Status</string>
+    <string name="notification_channel_vpn_desc">VPN connection status notifications</string>
+    <string name="notification_vpn_connected">VPN Connected</string>
+    <string name="notification_vpn_connected_desc">Secure connection via %s</string>
+    <string name="notification_vpn_connecting">VPN Connecting</string>
+    <string name="notification_vpn_disconnected">VPN Disconnected</string>
 
     <!-- Protocol Names -->
     <string name="protocol_wireguard">WireGuard</string>
     <string name="protocol_openvpn">OpenVPN</string>
     <string name="protocol_v2ray">V2Ray</string>
-
-    <!-- Server Selection -->
-    <string name="select_server">Select Server</string>
-    <string name="server_location">Location</string>
-    <string name="server_latency">Latency</string>
-
-    <!-- Settings -->
-    <string name="settings">Settings</string>
-    <string name="kill_switch">Kill Switch</string>
-    <string name="kill_switch_desc">Block internet if VPN disconnects</string>
-    <string name="split_tunneling">Split Tunneling</string>
-    <string name="split_tunneling_desc">Choose apps to bypass VPN</string>
-    <string name="auto_connect">Auto Connect</string>
-    <string name="auto_connect_desc">Connect VPN on app start</string>
-
-    <!-- Notifications -->
-    <string name="notification_channel_vpn">VPN Connection</string>
-    <string name="notification_vpn_connected">VPN Connected</string>
-    <string name="notification_vpn_disconnected">VPN Disconnected</string>
-
-    <!-- Errors -->
-    <string name="error_vpn_permission">VPN permission required</string>
-    <string name="error_connection_failed">Connection failed</string>
-    <string name="error_server_unreachable">Server unreachable</string>
-    <string name="error_invalid_config">Invalid configuration</string>
 </resources>

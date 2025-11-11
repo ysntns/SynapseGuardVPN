@@ -19,7 +19,8 @@ data class StatsUiState(
     val isRunningSpeedTest: Boolean = false,
     val speedTestResult: SpeedTestResult? = null,
     val dataUsageHistory: List<DataUsagePoint> = emptyList(),
-    val neuralLatency: Int = 0 // milliseconds
+    val neuralLatency: Int = 0, // milliseconds
+    val speedHistory: List<SpeedHistoryPoint> = emptyList() // Real-time speed tracking
 )
 
 data class SpeedTestResult(
@@ -33,6 +34,12 @@ data class DataUsagePoint(
     val bytesUsed: Long
 )
 
+data class SpeedHistoryPoint(
+    val timestamp: Long,
+    val downloadSpeedMbps: Double,
+    val uploadSpeedMbps: Double
+)
+
 @HiltViewModel
 class StatsViewModel @Inject constructor(
     observeConnectionStatsUseCase: ObserveConnectionStatsUseCase
@@ -41,15 +48,33 @@ class StatsViewModel @Inject constructor(
     private val _uiState = MutableStateFlow(StatsUiState())
     val uiState: StateFlow<StatsUiState> = _uiState.asStateFlow()
 
+    private val maxSpeedHistoryPoints = 60 // Keep 60 seconds of data
+
     init {
         // Observe connection stats from repository
         viewModelScope.launch {
             observeConnectionStatsUseCase().collect { stats ->
+                val downloadMbps = (stats.downloadSpeedBps * 8.0) / (1024 * 1024)
+                val uploadMbps = (stats.uploadSpeedBps * 8.0) / (1024 * 1024)
+
+                // Add new speed point to history
+                val newSpeedPoint = SpeedHistoryPoint(
+                    timestamp = System.currentTimeMillis(),
+                    downloadSpeedMbps = downloadMbps,
+                    uploadSpeedMbps = uploadMbps
+                )
+
+                val updatedHistory = (_uiState.value.speedHistory + newSpeedPoint)
+                    .takeLast(maxSpeedHistoryPoints) // Keep only last 60 points
+
                 _uiState.value = _uiState.value.copy(
-                    downloadSpeed = stats.bytesReceived,
-                    uploadSpeed = stats.bytesSent,
+                    downloadSpeed = stats.downloadSpeedBps, // Use actual speed
+                    uploadSpeed = stats.uploadSpeedBps, // Use actual speed
                     totalDataUsed = stats.bytesReceived + stats.bytesSent,
-                    sessionDuration = if (stats.bytesReceived > 0) System.currentTimeMillis() else 0
+                    sessionDuration = if (stats.sessionStartTime > 0) {
+                        System.currentTimeMillis() - stats.sessionStartTime
+                    } else 0,
+                    speedHistory = updatedHistory
                 )
             }
         }

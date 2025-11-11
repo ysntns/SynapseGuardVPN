@@ -6,6 +6,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
@@ -26,9 +27,21 @@ fun HomeScreen(
     onNavigateToServers: () -> Unit,
     onNavigateToSettings: () -> Unit,
     onNavigateToStats: () -> Unit = {},
+    snackbarHostState: SnackbarHostState,
     viewModel: HomeViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
+
+    // Show snackbar when there's an error
+    LaunchedEffect(uiState.error) {
+        uiState.error?.let { error ->
+            snackbarHostState.showSnackbar(
+                message = error,
+                duration = SnackbarDuration.Short
+            )
+            viewModel.clearError()
+        }
+    }
 
     Scaffold(
         containerColor = BackgroundPrimary,
@@ -50,6 +63,15 @@ fun HomeScreen(
                     }
                 },
                 actions = {
+                    // Refresh server latencies button
+                    IconButton(onClick = { viewModel.refreshServerLatencies() }) {
+                        Icon(
+                            Icons.Default.Refresh,
+                            contentDescription = "Refresh Server Latencies",
+                            tint = IconPrimary
+                        )
+                    }
+
                     IconButton(onClick = onNavigateToStats) {
                         Icon(
                             Icons.Default.BarChart,
@@ -61,14 +83,6 @@ fun HomeScreen(
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = BackgroundSecondary
                 )
-            )
-        },
-        bottomBar = {
-            BottomNavigationBar(
-                selectedIndex = 0,
-                onHomeClick = { /* Already on home */ },
-                onServersClick = onNavigateToServers,
-                onSettingsClick = onNavigateToSettings
             )
         }
     ) { paddingValues ->
@@ -142,110 +156,7 @@ fun HomeScreen(
             }
 
             Spacer(modifier = Modifier.weight(1f))
-
-            // Error message
-            uiState.error?.let { error ->
-                Card(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(bottom = 16.dp),
-                    colors = CardDefaults.cardColors(
-                        containerColor = StatusDisconnected.copy(alpha = 0.2f)
-                    )
-                ) {
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(12.dp),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Text(
-                            text = error,
-                            color = StatusDisconnected,
-                            modifier = Modifier.weight(1f)
-                        )
-                        IconButton(onClick = { viewModel.clearError() }) {
-                            Icon(
-                                Icons.Default.Close,
-                                contentDescription = "Dismiss",
-                                tint = StatusDisconnected
-                            )
-                        }
-                    }
-                }
-            }
         }
-    }
-}
-
-@Composable
-private fun BottomNavigationBar(
-    selectedIndex: Int,
-    onHomeClick: () -> Unit,
-    onServersClick: () -> Unit,
-    onSettingsClick: () -> Unit
-) {
-    NavigationBar(
-        containerColor = BackgroundSecondary,
-        contentColor = TextPrimary
-    ) {
-        NavigationBarItem(
-            selected = selectedIndex == 0,
-            onClick = onHomeClick,
-            icon = {
-                Icon(
-                    Icons.Default.Home,
-                    contentDescription = "Home"
-                )
-            },
-            label = { Text("Home") },
-            colors = NavigationBarItemDefaults.colors(
-                selectedIconColor = CyanPrimary,
-                selectedTextColor = CyanPrimary,
-                unselectedIconColor = TextSecondary,
-                unselectedTextColor = TextSecondary,
-                indicatorColor = SurfaceSelected
-            )
-        )
-
-        NavigationBarItem(
-            selected = selectedIndex == 1,
-            onClick = onServersClick,
-            icon = {
-                Icon(
-                    Icons.Default.Storage,
-                    contentDescription = "Servers"
-                )
-            },
-            label = { Text("Servers") },
-            colors = NavigationBarItemDefaults.colors(
-                selectedIconColor = CyanPrimary,
-                selectedTextColor = CyanPrimary,
-                unselectedIconColor = TextSecondary,
-                unselectedTextColor = TextSecondary,
-                indicatorColor = SurfaceSelected
-            )
-        )
-
-        NavigationBarItem(
-            selected = selectedIndex == 2,
-            onClick = onSettingsClick,
-            icon = {
-                Icon(
-                    Icons.Default.Settings,
-                    contentDescription = "Settings"
-                )
-            },
-            label = { Text("Settings") },
-            colors = NavigationBarItemDefaults.colors(
-                selectedIconColor = CyanPrimary,
-                selectedTextColor = CyanPrimary,
-                unselectedIconColor = TextSecondary,
-                unselectedTextColor = TextSecondary,
-                indicatorColor = SurfaceSelected
-            )
-        )
     }
 }
 

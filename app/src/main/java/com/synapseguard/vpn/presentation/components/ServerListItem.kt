@@ -5,6 +5,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.WorkspacePremium
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -20,17 +21,29 @@ fun ServerListItem(
     server: VpnServer,
     isSelected: Boolean,
     onClick: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    canAccess: Boolean = true // Whether user can access this server (for premium restrictions)
 ) {
     Card(
         modifier = modifier
             .fillMaxWidth()
-            .clickable(onClick = onClick),
+            .clickable(
+                enabled = canAccess,
+                onClick = onClick
+            ),
         colors = CardDefaults.cardColors(
-            containerColor = if (isSelected) SurfaceSelected else BackgroundSecondary
+            containerColor = if (isSelected) {
+                SurfaceSelected
+            } else if (!canAccess) {
+                BackgroundSecondary.copy(alpha = 0.5f)
+            } else {
+                BackgroundSecondary
+            }
         ),
         border = if (isSelected) {
             BorderStroke(2.dp, BorderAccent)
+        } else if (server.isPremium && !canAccess) {
+            BorderStroke(1.dp, IconYellow.copy(alpha = 0.5f))
         } else {
             BorderStroke(1.dp, BorderPrimary)
         }
@@ -55,16 +68,29 @@ fun ServerListItem(
                 )
 
                 Column {
-                    Text(
-                        text = server.city,
-                        fontSize = 16.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = TextPrimary
-                    )
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(6.dp)
+                    ) {
+                        Text(
+                            text = server.city,
+                            fontSize = 16.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = if (canAccess) TextPrimary else TextSecondary
+                        )
+                        if (server.isPremium) {
+                            Icon(
+                                Icons.Default.WorkspacePremium,
+                                contentDescription = "Premium Server",
+                                tint = IconYellow,
+                                modifier = Modifier.size(16.dp)
+                            )
+                        }
+                    }
                     Text(
                         text = server.country,
                         fontSize = 14.sp,
-                        color = TextSecondary
+                        color = if (canAccess) TextSecondary else TextSecondary.copy(alpha = 0.5f)
                     )
                 }
             }
@@ -74,21 +100,35 @@ fun ServerListItem(
                 horizontalArrangement = Arrangement.spacedBy(12.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                // Server load
+                // Server load or Premium label
                 Column(
                     horizontalAlignment = Alignment.End
                 ) {
-                    Text(
-                        text = "${server.load}%",
-                        fontSize = 14.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = getLoadColor(server.load)
-                    )
-                    Text(
-                        text = "${server.latency}ms",
-                        fontSize = 12.sp,
-                        color = TextSecondary
-                    )
+                    if (!canAccess && server.isPremium) {
+                        Text(
+                            text = "Premium",
+                            fontSize = 12.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = IconYellow
+                        )
+                        Text(
+                            text = "Locked",
+                            fontSize = 10.sp,
+                            color = TextSecondary
+                        )
+                    } else {
+                        Text(
+                            text = "${server.load}%",
+                            fontSize = 14.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = if (canAccess) getLoadColor(server.load) else getLoadColor(server.load).copy(alpha = 0.5f)
+                        )
+                        Text(
+                            text = "${server.latency}ms",
+                            fontSize = 12.sp,
+                            color = if (canAccess) TextSecondary else TextSecondary.copy(alpha = 0.5f)
+                        )
+                    }
                 }
 
                 // Selection indicator
