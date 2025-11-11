@@ -9,6 +9,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
@@ -18,6 +19,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import com.synapseguard.vpn.presentation.auth.AuthViewModel
 import com.synapseguard.vpn.presentation.components.ServerListItem
 import com.synapseguard.vpn.presentation.theme.*
+import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -31,6 +33,7 @@ fun ServersScreen(
     var showSortMenu by remember { mutableStateOf(false) }
 
     val snackbarHostState = remember { SnackbarHostState() }
+    val coroutineScope = rememberCoroutineScope()
 
     // Show snackbar for errors
     LaunchedEffect(uiState.error) {
@@ -259,7 +262,7 @@ fun ServersScreen(
                             viewModel.selectServer(server)
                         } else {
                             // Show snackbar for premium servers
-                            kotlinx.coroutines.GlobalScope.launch {
+                            coroutineScope.launch {
                                 snackbarHostState.showSnackbar(
                                     message = "Upgrade to Premium to access this server",
                                     duration = SnackbarDuration.Short

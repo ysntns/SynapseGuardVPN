@@ -8,9 +8,12 @@ import com.synapseguard.vpn.domain.model.SubscriptionTier
 import com.synapseguard.vpn.domain.repository.BillingRepository
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.withContext
 import timber.log.Timber
@@ -32,6 +35,9 @@ class BillingRepositoryImpl @Inject constructor(
 
     private lateinit var billingClient: BillingClient
     private var currentActivity: Activity? = null
+
+    // Create a coroutine scope for background operations
+    private val billingScope = CoroutineScope(ioDispatcher + SupervisorJob())
 
     // Product IDs for subscriptions (these should match your Google Play Console setup)
     companion object {
@@ -232,7 +238,7 @@ class BillingRepositoryImpl @Inject constructor(
         purchases.forEach { purchase ->
             if (purchase.purchaseState == Purchase.PurchaseState.PURCHASED) {
                 // Acknowledge the purchase if not already acknowledged
-                kotlinx.coroutines.GlobalScope.launch(ioDispatcher) {
+                billingScope.launch {
                     acknowledgePurchase(purchase)
                 }
             }

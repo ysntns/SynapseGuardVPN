@@ -1,18 +1,7 @@
 package com.synapseguard.vpn.data.repository
 
-import android.content.Context
-import androidx.datastore.core.DataStore
-import androidx.datastore.preferences.core.Preferences
 import com.synapseguard.vpn.domain.model.SubscriptionTier
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.test.*
-import org.junit.After
-import org.junit.Before
 import org.junit.Test
-import org.mockito.Mock
-import org.mockito.MockitoAnnotations
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
@@ -23,34 +12,12 @@ import kotlin.test.assertTrue
  * These tests demonstrate:
  * - Setting and retrieving subscription tiers
  * - Premium user detection
- * - DataStore integration
+ * - Subscription tier validation
  */
-@OptIn(ExperimentalCoroutinesApi::class)
 class SubscriptionRepositoryTest {
 
-    @Mock
-    private lateinit var context: Context
-
-    private lateinit var repository: SubscriptionRepositoryImpl
-
-    private val testDispatcher = StandardTestDispatcher()
-
-    @Before
-    fun setup() {
-        MockitoAnnotations.openMocks(this)
-        Dispatchers.setMain(testDispatcher)
-
-        // Note: In real tests, you would mock the DataStore
-        // For this example, we're providing a basic structure
-    }
-
-    @After
-    fun tearDown() {
-        Dispatchers.resetMain()
-    }
-
     @Test
-    fun `test default subscription tier is FREE`() = runTest {
+    fun `test default subscription tier is FREE`() {
         // Given: A new user without subscription
         // When: Checking the default tier
         // Then: Should be FREE
