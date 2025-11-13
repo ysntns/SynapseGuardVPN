@@ -120,15 +120,33 @@ For detailed project structure, see [PROJECT_STRUCTURE.md](PROJECT_STRUCTURE.md)
    cd SynapseGuardVPN
    ```
 
-2. Open in Android Studio
+2. Configure Android SDK location
+   - Copy the example configuration file:
+     ```bash
+     cp local.properties.example local.properties
+     ```
+   - Edit `local.properties` and update the `sdk.dir` path to your Android SDK location:
+     ```properties
+     # Linux/Mac example:
+     sdk.dir=/home/YOUR_USERNAME/Android/Sdk
+
+     # Windows example:
+     sdk.dir=C\\:\\Users\\YOUR_USERNAME\\AppData\\Local\\Android\\Sdk
+     ```
+   - Or create the file directly:
+     ```bash
+     echo "sdk.dir=/path/to/your/Android/Sdk" > local.properties
+     ```
+
+3. Open in Android Studio
    - File → Open → Select the project directory
 
-3. Build the project
+4. Build the project
    ```bash
    ./gradlew build
    ```
 
-4. Run on device/emulator
+5. Run on device/emulator
    ```bash
    ./gradlew installDebug
    ```
