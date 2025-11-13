@@ -10,6 +10,7 @@ import android.os.Build
 import android.os.ParcelFileDescriptor
 import android.system.OsConstants
 import androidx.core.app.NotificationCompat
+import com.synapseguard.vpn.domain.model.ConnectionStats
 import com.synapseguard.vpn.service.wireguard.WireGuardHandler
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -250,8 +251,8 @@ class VpnConnectionService : VpnService() {
                     val downloadSpeed = ((currentStats.bytesReceived - lastBytesReceived) / elapsedSeconds).toLong()
 
                     _connectionStats.value = currentStats.copy(
-                        uploadSpeed = uploadSpeed,
-                        downloadSpeed = downloadSpeed
+                        uploadSpeedBps = uploadSpeed,
+                        downloadSpeedBps = downloadSpeed
                     )
 
                     lastBytesSent = currentStats.bytesSent
@@ -384,12 +385,3 @@ enum class ConnectionState {
     DISCONNECTING,
     ERROR
 }
-
-data class ConnectionStats(
-    val bytesReceived: Long = 0L,
-    val bytesSent: Long = 0L,
-    val packetsReceived: Long = 0L,
-    val packetsSent: Long = 0L,
-    val downloadSpeed: Long = 0L,  // bytes per second
-    val uploadSpeed: Long = 0L      // bytes per second
-)

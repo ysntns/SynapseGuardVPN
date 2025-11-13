@@ -1,6 +1,7 @@
 package com.synapseguard.vpn.service.core
 
 import android.os.ParcelFileDescriptor
+import com.synapseguard.vpn.domain.model.ConnectionStats
 
 interface VpnProtocolHandler {
     suspend fun connect(
@@ -16,10 +17,3 @@ interface VpnProtocolHandler {
 
     suspend fun getStats(): ConnectionStats
 }
-
-data class ConnectionStats(
-    val bytesReceived: Long = 0L,
-    val bytesSent: Long = 0L,
-    val packetsReceived: Long = 0L,
-    val packetsSent: Long = 0L
-)
