@@ -59,16 +59,7 @@ class HomeViewModel @Inject constructor(
     }
 
     fun onConnectClick() {
-        // Request VPN permission first
-        try {
-            com.synapseguard.vpn.presentation.MainActivity.requestVpnPermissionStatic {
-                // Permission granted, proceed with connection
-                connectToVpn()
-            }
-        } catch (e: Exception) {
-            // Fallback: just try to connect directly
-            connectToVpn()
-        }
+        connectToVpn()
     }
 
     private fun connectToVpn() {

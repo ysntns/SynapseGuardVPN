@@ -1,15 +1,20 @@
 package com.synapseguard.vpn.presentation.splittunnel
 
+import android.content.Context
 import android.content.pm.ApplicationInfo
 import android.content.pm.PackageManager
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.synapseguard.vpn.di.IoDispatcher
+import com.synapseguard.vpn.domain.repository.SettingsRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.CoroutineDispatcher
 import javax.inject.Inject
+import dagger.hilt.android.qualifiers.ApplicationContext
 
 data class AppInfo(
     val packageName: String,
@@ -26,7 +31,9 @@ data class SplitTunnelUiState(
 
 @HiltViewModel
 class SplitTunnelViewModel @Inject constructor(
-    private val packageManager: PackageManager
+    @ApplicationContext private val context: Context,
+    private val settingsRepository: SettingsRepository,
+    @IoDispatcher private val ioDispatcher: CoroutineDispatcher
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(SplitTunnelUiState())
@@ -35,12 +42,26 @@ class SplitTunnelViewModel @Inject constructor(
     private val enabledApps = mutableSetOf<String>()
 
     init {
-        loadInstalledApps()
+        loadPreferences()
+    }
+
+    private fun loadPreferences() {
+        viewModelScope.launch(ioDispatcher) {
+            try {
+                val settings = settingsRepository.getSettings()
+                enabledApps.clear()
+                enabledApps.addAll(settings.excludedApps)
+                loadInstalledApps()
+            } catch (e: Exception) {
+                loadInstalledApps()
+            }
+        }
     }
 
     private fun loadInstalledApps() {
-        viewModelScope.launch {
+        viewModelScope.launch(ioDispatcher) {
             try {
+                val packageManager = context.packageManager
                 val installedApps = packageManager.getInstalledApplications(PackageManager.GET_META_DATA)
                     .filter { app ->
                         // Filter out system apps (optional, can be configured)
@@ -86,7 +107,22 @@ class SplitTunnelViewModel @Inject constructor(
             }
         )
 
-        // TODO: Persist to DataStore
+        persistSelection()
+    }
+
+    private fun persistSelection() {
+        viewModelScope.launch(ioDispatcher) {
+            try {
+                val settings = settingsRepository.getSettings()
+                val updated = settings.copy(
+                    splitTunneling = true,
+                    excludedApps = enabledApps.toSet()
+                )
+                settingsRepository.updateSettings(updated)
+            } catch (_: Exception) {
+                // Ignore persistence errors for now but keep UI responsive
+            }
+        }
     }
 
     fun updateSearchQuery(query: String) {

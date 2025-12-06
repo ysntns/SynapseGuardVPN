@@ -28,6 +28,10 @@ fun HomeScreen(
     onNavigateToSettings: () -> Unit,
     onNavigateToStats: () -> Unit = {},
     snackbarHostState: SnackbarHostState,
+    vpnPermissionGranted: Boolean,
+    notificationPermissionGranted: Boolean,
+    onRequestVpnPermission: (onPermissionGranted: () -> Unit) -> Unit,
+    onRequestNotificationPermission: () -> Unit,
     viewModel: HomeViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
@@ -95,13 +99,24 @@ fun HomeScreen(
         ) {
             Spacer(modifier = Modifier.height(16.dp))
 
+            PermissionReminderCard(
+                vpnPermissionGranted = vpnPermissionGranted,
+                notificationPermissionGranted = notificationPermissionGranted,
+                onRequestVpnPermission = { onRequestVpnPermission {} },
+                onRequestNotificationPermission = onRequestNotificationPermission
+            )
+
             // Circular Connection Button
             CircularConnectionButton(
                 vpnState = uiState.vpnState,
                 onClick = {
                     when (uiState.vpnState) {
                         is VpnState.Connected -> viewModel.onDisconnectClick()
-                        is VpnState.Idle, is VpnState.Error -> viewModel.onConnectClick()
+                        is VpnState.Idle, is VpnState.Error -> if (vpnPermissionGranted) {
+                            viewModel.onConnectClick()
+                        } else {
+                            onRequestVpnPermission { viewModel.onConnectClick() }
+                        }
                         else -> {}
                     }
                 },
@@ -186,5 +201,56 @@ private fun formatBytes(bytes: Long): String {
         bytes >= 1_000_000 -> String.format("%.2f MB", bytes / 1_000_000.0)
         bytes >= 1_000 -> String.format("%.2f KB", bytes / 1_000.0)
         else -> "$bytes B"
+    }
+}
+
+@Composable
+private fun PermissionReminderCard(
+    vpnPermissionGranted: Boolean,
+    notificationPermissionGranted: Boolean,
+    onRequestVpnPermission: () -> Unit,
+    onRequestNotificationPermission: () -> Unit
+) {
+    if (vpnPermissionGranted && notificationPermissionGranted) return
+
+    Card(
+        modifier = Modifier
+            .fillMaxWidth(),
+        colors = CardDefaults.cardColors(containerColor = BackgroundCard)
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            Text(
+                text = "Permissions required",
+                style = MaterialTheme.typography.titleMedium,
+                color = TextPrimary
+            )
+
+            Text(
+                text = "Allow VPN access and notifications so we can keep your connection stable and alert you when the tunnel state changes.",
+                style = MaterialTheme.typography.bodyMedium,
+                color = TextSecondary
+            )
+
+            if (!vpnPermissionGranted) {
+                OutlinedButton(onClick = onRequestVpnPermission) {
+                    Icon(Icons.Default.VpnKey, contentDescription = null, tint = CyanPrimary)
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text("Grant VPN permission", color = TextPrimary)
+                }
+            }
+
+            if (!notificationPermissionGranted) {
+                OutlinedButton(onClick = onRequestNotificationPermission) {
+                    Icon(Icons.Default.Notifications, contentDescription = null, tint = CyanPrimary)
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text("Enable notifications", color = TextPrimary)
+                }
+            }
+        }
     }
 }
