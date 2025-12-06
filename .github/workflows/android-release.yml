@@ -1,12 +1,21 @@
-name: Android Release Build
+name: Android Build
 
 on:
   workflow_dispatch:
+    inputs:
+      build_type:
+        description: 'Build type'
+        required: true
+        default: 'debug'
+        type: choice
+        options:
+          - debug
+          - release
   push:
-    branches: [ work ]
+    branches: [ main, master ]
 
 jobs:
-  assemble:
+  build:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -17,12 +26,26 @@ jobs:
         with:
           distribution: temurin
           java-version: 17
-          cache: gradle
 
-      - name: Configure Gradle
-        uses: gradle/actions/setup-gradle@v3
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          cache-disabled: true
 
-      - name: Prepare signing config
+      - name: Grant execute permission for gradlew
+        run: chmod +x gradlew
+
+      - name: Determine build type
+        id: build_type
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "type=${{ github.event.inputs.build_type }}" >> $GITHUB_OUTPUT
+          else
+            echo "type=debug" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Prepare signing config (Release only)
+        if: steps.build_type.outputs.type == 'release'
         env:
           RELEASE_KEYSTORE_BASE64: ${{ secrets.RELEASE_KEYSTORE_BASE64 }}
           RELEASE_STORE_PASSWORD: ${{ secrets.RELEASE_STORE_PASSWORD }}
@@ -51,10 +74,23 @@ jobs:
           } >> gradle.properties
         shell: bash
 
-      - name: Build release APK
-        run: ./gradlew assembleRelease
+      - name: Build Debug APK
+        if: steps.build_type.outputs.type == 'debug'
+        run: ./gradlew assembleDebug --no-daemon
 
-      - name: Upload APK
+      - name: Build Release APK
+        if: steps.build_type.outputs.type == 'release'
+        run: ./gradlew assembleRelease --no-daemon
+
+      - name: Upload Debug APK
+        if: steps.build_type.outputs.type == 'debug'
+        uses: actions/upload-artifact@v4
+        with:
+          name: app-debug
+          path: app/build/outputs/apk/debug/*.apk
+
+      - name: Upload Release APK
+        if: steps.build_type.outputs.type == 'release'
         uses: actions/upload-artifact@v4
         with:
           name: app-release
