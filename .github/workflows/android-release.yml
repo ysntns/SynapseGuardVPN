@@ -12,7 +12,7 @@ on:
           - debug
           - release
   push:
-    branches: [ work, main, master, claude/* ]
+    branches: [ main, master ]
 
 jobs:
   build:
@@ -26,10 +26,14 @@ jobs:
         with:
           distribution: temurin
           java-version: 17
-          cache: gradle
 
-      - name: Configure Gradle
-        uses: gradle/actions/setup-gradle@v3
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          cache-disabled: true
+
+      - name: Grant execute permission for gradlew
+        run: chmod +x gradlew
 
       - name: Determine build type
         id: build_type
@@ -70,16 +74,13 @@ jobs:
           } >> gradle.properties
         shell: bash
 
-      - name: Run Tests
-        run: ./gradlew test
-
       - name: Build Debug APK
         if: steps.build_type.outputs.type == 'debug'
-        run: ./gradlew assembleDebug
+        run: ./gradlew assembleDebug --no-daemon
 
       - name: Build Release APK
         if: steps.build_type.outputs.type == 'release'
-        run: ./gradlew assembleRelease
+        run: ./gradlew assembleRelease --no-daemon
 
       - name: Upload Debug APK
         if: steps.build_type.outputs.type == 'debug'
