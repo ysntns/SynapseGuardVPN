@@ -214,12 +214,12 @@ class VpnConnectionService : VpnService() {
                             outputStream.write(buffer.array(), 0, length)
 
                             // Update received bytes
-                            val updatedTimestamp = System.currentTimeMillis()
+                            val receivedTimestamp = System.currentTimeMillis()
                             _connectionStats.value = _connectionStats.value.copy(
                                 bytesReceived = _connectionStats.value.bytesReceived + length,
                                 packetsReceived = _connectionStats.value.packetsReceived + 1,
-                                timestamp = updatedTimestamp,
-                                duration = (updatedTimestamp - sessionStartTime).coerceAtLeast(0)
+                                timestamp = receivedTimestamp,
+                                duration = (receivedTimestamp - sessionStartTime).coerceAtLeast(0)
                             )
                         }
 

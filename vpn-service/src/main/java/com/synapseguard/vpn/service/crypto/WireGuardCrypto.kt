@@ -1,10 +1,7 @@
 package com.synapseguard.vpn.service.crypto
 
 import org.bouncycastle.crypto.agreement.X25519Agreement
-import org.bouncycastle.crypto.engines.ChaCha20Poly1305Engine
 import org.bouncycastle.crypto.generators.X25519KeyPairGenerator
-import org.bouncycastle.crypto.params.AEADParameters
-import org.bouncycastle.crypto.params.KeyParameter
 import org.bouncycastle.crypto.params.X25519KeyGenerationParameters
 import org.bouncycastle.crypto.params.X25519PrivateKeyParameters
 import org.bouncycastle.crypto.params.X25519PublicKeyParameters
@@ -12,7 +9,7 @@ import org.bouncycastle.crypto.digests.Blake2sDigest
 import timber.log.Timber
 import java.security.SecureRandom
 import javax.crypto.Cipher
-import javax.crypto.spec.IvParameterSpec
+import javax.crypto.spec.GCMParameterSpec
 import javax.crypto.spec.SecretKeySpec
 
 /**
@@ -106,7 +103,7 @@ class WireGuardCrypto {
     }
 
     /**
-     * ChaCha20-Poly1305 AEAD encryption
+     * ChaCha20-Poly1305 AEAD encryption using Java standard API
      *
      * @param key 32-byte encryption key
      * @param counter 8-byte counter (nonce lower bits)
@@ -123,22 +120,20 @@ class WireGuardCrypto {
         require(key.size == KEY_SIZE) { "Key must be $KEY_SIZE bytes" }
 
         val nonce = createNonce(counter)
-        val engine = ChaCha20Poly1305Engine()
+        val cipher = Cipher.getInstance("ChaCha20-Poly1305")
+        val keySpec = SecretKeySpec(key, "ChaCha20")
+        val paramSpec = GCMParameterSpec(TAG_SIZE * 8, nonce)
 
-        val keyParam = KeyParameter(key)
-        val aeadParams = AEADParameters(keyParam, TAG_SIZE * 8, nonce, associatedData)
+        cipher.init(Cipher.ENCRYPT_MODE, keySpec, paramSpec)
+        if (associatedData.isNotEmpty()) {
+            cipher.updateAAD(associatedData)
+        }
 
-        engine.init(true, aeadParams)
-
-        val ciphertext = ByteArray(engine.getOutputSize(plaintext.size))
-        var len = engine.processBytes(plaintext, 0, plaintext.size, ciphertext, 0)
-        len += engine.doFinal(ciphertext, len)
-
-        return ciphertext.copyOf(len)
+        return cipher.doFinal(plaintext)
     }
 
     /**
-     * ChaCha20-Poly1305 AEAD decryption
+     * ChaCha20-Poly1305 AEAD decryption using Java standard API
      *
      * @param key 32-byte decryption key
      * @param counter 8-byte counter (nonce lower bits)
@@ -160,19 +155,18 @@ class WireGuardCrypto {
         }
 
         val nonce = createNonce(counter)
-        val engine = ChaCha20Poly1305Engine()
-
-        val keyParam = KeyParameter(key)
-        val aeadParams = AEADParameters(keyParam, TAG_SIZE * 8, nonce, associatedData)
 
         return try {
-            engine.init(false, aeadParams)
+            val cipher = Cipher.getInstance("ChaCha20-Poly1305")
+            val keySpec = SecretKeySpec(key, "ChaCha20")
+            val paramSpec = GCMParameterSpec(TAG_SIZE * 8, nonce)
 
-            val plaintext = ByteArray(engine.getOutputSize(ciphertext.size))
-            var len = engine.processBytes(ciphertext, 0, ciphertext.size, plaintext, 0)
-            len += engine.doFinal(plaintext, len)
+            cipher.init(Cipher.DECRYPT_MODE, keySpec, paramSpec)
+            if (associatedData.isNotEmpty()) {
+                cipher.updateAAD(associatedData)
+            }
 
-            plaintext.copyOf(len)
+            cipher.doFinal(ciphertext)
         } catch (e: Exception) {
             Timber.e(e, "WireGuard: Decryption authentication failed")
             null
