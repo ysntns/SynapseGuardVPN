@@ -1,7 +1,7 @@
 package com.synapseguard.vpn.service.core
 
 import android.os.ParcelFileDescriptor
-import com.synapseguard.vpn.domain.model.ConnectionStats
+import com.synapseguard.vpn.service.core.ConnectionStats
 
 interface VpnProtocolHandler {
     suspend fun connect(

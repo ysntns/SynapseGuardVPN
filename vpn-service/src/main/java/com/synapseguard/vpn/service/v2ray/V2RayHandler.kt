@@ -292,7 +292,7 @@ class V2RayHandler : VpnProtocolHandler {
                 serverAddress = host,
                 serverPort = port,
                 uuid = uuid,
-                security = parseVLESSSecurity(paramMap["encryption"] ?: "none"),
+                vlessSecurity = parseVLESSSecurity(paramMap["encryption"] ?: "none"),
                 transport = parseTransport(paramMap["type"] ?: "tcp"),
                 tls = paramMap["security"] == "tls" || paramMap["security"] == "xtls",
                 sni = paramMap["sni"] ?: "",
@@ -420,7 +420,7 @@ class V2RayHandler : VpnProtocolHandler {
                         serverAddress = vnext?.optString("address") ?: "",
                         serverPort = vnext?.optInt("port") ?: 443,
                         uuid = users?.optString("id") ?: "",
-                        security = parseVLESSSecurity(users?.optString("encryption") ?: "none"),
+                        vlessSecurity = parseVLESSSecurity(users?.optString("encryption") ?: "none"),
                         flow = users?.optString("flow") ?: "",
                         transport = parseTransport(streamSettings?.optString("network") ?: "tcp"),
                         tls = streamSettings?.optString("security") == "tls"
