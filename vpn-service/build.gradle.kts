@@ -58,11 +58,10 @@ dependencies {
     // Cryptography - Bouncy Castle for ChaCha20-Poly1305, Curve25519, BLAKE2s
     implementation("org.bouncycastle:bcprov-jdk18on:1.77")
 
-    // OpenVPN - ics-openvpn core
-    implementation("de.blinkt.openvpn:openvpn-core:0.7.46")
-
-    // V2Ray Core
-    implementation("com.github.nickyisexist:libv2ray:1.0.0")
+    // OpenVPN and V2Ray - TODO: Add when libraries are available
+    // These require custom repository setup or building from source
+    // implementation("de.blinkt.openvpn:openvpn-core:0.7.46")
+    // implementation("com.github.nickyisexist:libv2ray:1.0.0")
 
     // Timber for logging
     implementation("com.jakewharton.timber:timber:5.0.1")
