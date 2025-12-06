@@ -8,6 +8,8 @@ import com.synapseguard.vpn.domain.model.ConnectionConfig
 import com.synapseguard.vpn.domain.model.ConnectionStats
 import com.synapseguard.vpn.domain.model.VpnState
 import com.synapseguard.vpn.domain.repository.VpnRepository
+import com.synapseguard.vpn.service.core.ConnectionState
+import com.synapseguard.vpn.service.core.VpnConnectionService
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.Flow
@@ -28,13 +30,8 @@ class VpnRepositoryImpl @Inject constructor(
 
     private val repositoryScope = CoroutineScope(SupervisorJob() + ioDispatcher)
     private var stateMonitorJob: Job? = null
+    private var statsMonitorJob: Job? = null
     private var currentConfig: ConnectionConfig? = null
-
-    // For speed calculation
-    private var lastBytesReceived = 0L
-    private var lastBytesSent = 0L
-    private var lastStatsUpdateTime = 0L
-    private var sessionStartTime = 0L
 
     override fun observeVpnState(): Flow<VpnState> = _vpnState.asStateFlow()
 
@@ -58,17 +55,14 @@ class VpnRepositoryImpl @Inject constructor(
             _vpnState.value = VpnState.Connecting
 
             // Start VPN service with configuration
-            val serviceIntent = Intent(
-                context,
-                Class.forName("com.synapseguard.vpn.service.core.VpnConnectionService")
-            ).apply {
-                action = "com.synapseguard.vpn.ACTION_CONNECT"
-                putExtra("server_address", config.server.ipAddress)
-                putExtra("server_port", config.server.port)
-                putExtra("kill_switch", config.enableKillSwitch)
-                putExtra("split_tunneling", config.enableSplitTunneling)
-                putStringArrayListExtra("excluded_apps", ArrayList(config.excludedApps))
-                putStringArrayListExtra("dns_servers", ArrayList(config.dns))
+            val serviceIntent = Intent(context, VpnConnectionService::class.java).apply {
+                action = VpnConnectionService.ACTION_CONNECT
+                putExtra(VpnConnectionService.EXTRA_SERVER_ADDRESS, config.server.ipAddress)
+                putExtra(VpnConnectionService.EXTRA_SERVER_PORT, config.server.port)
+                putExtra(VpnConnectionService.EXTRA_KILL_SWITCH, config.enableKillSwitch)
+                putExtra(VpnConnectionService.EXTRA_SPLIT_TUNNELING, config.enableSplitTunneling)
+                putStringArrayListExtra(VpnConnectionService.EXTRA_EXCLUDED_APPS, ArrayList(config.excludedApps))
+                putStringArrayListExtra(VpnConnectionService.EXTRA_DNS_SERVERS, ArrayList(config.dns))
             }
 
             context.startForegroundService(serviceIntent)
@@ -108,11 +102,8 @@ class VpnRepositoryImpl @Inject constructor(
             stateMonitorJob?.cancel()
 
             // Stop VPN service
-            val serviceIntent = Intent(
-                context,
-                Class.forName("com.synapseguard.vpn.service.core.VpnConnectionService")
-            ).apply {
-                action = "com.synapseguard.vpn.ACTION_DISCONNECT"
+            val serviceIntent = Intent(context, VpnConnectionService::class.java).apply {
+                action = VpnConnectionService.ACTION_DISCONNECT
             }
 
             context.startService(serviceIntent)
@@ -123,12 +114,8 @@ class VpnRepositoryImpl @Inject constructor(
             _vpnState.value = VpnState.Idle
             _connectionStats.value = ConnectionStats()
             currentConfig = null
-
-            // Reset speed tracking
-            lastBytesReceived = 0L
-            lastBytesSent = 0L
-            lastStatsUpdateTime = 0L
-            sessionStartTime = 0L
+            statsMonitorJob?.cancel()
+            statsMonitorJob = null
 
             Timber.d("VPN disconnected")
             Result.success(Unit)
@@ -148,39 +135,36 @@ class VpnRepositoryImpl @Inject constructor(
         stateMonitorJob?.cancel()
         stateMonitorJob = repositoryScope.launch {
             try {
-                // Poll for service state
-                // In production, this would use broadcasts or IPC
-                var connected = false
+                while (isActive) {
+                    val service = VpnConnectionService.getInstance()
+                    if (service == null) {
+                        Timber.d("Waiting for VpnConnectionService instance...")
+                        delay(300)
+                        continue
+                    }
 
-                while (isActive && !connected) {
-                    delay(500)
-
-                    // Try to get service instance
-                    try {
-                        val serviceClass = Class.forName("com.synapseguard.vpn.service.core.VpnConnectionService")
-                        val getInstanceMethod = serviceClass.getMethod("getInstance")
-                        val serviceInstance = getInstanceMethod.invoke(null)
-
-                        if (serviceInstance != null) {
-                            // Get connection state via reflection
-                            val getStateMethod = serviceClass.getMethod("getConnectionState")
-                            val stateFlow = getStateMethod.invoke(serviceInstance)
-
-                            if (stateFlow != null) {
-                                // Successfully connected to service
-                                connected = true
+                    Timber.d("VpnConnectionService instance acquired, observing state")
+                    service.getConnectionState().collect { state ->
+                        when (state) {
+                            ConnectionState.CONNECTING -> _vpnState.value = VpnState.Connecting
+                            ConnectionState.CONNECTED -> {
                                 _vpnState.value = VpnState.Connected(
                                     server = config.server,
                                     connectedAt = System.currentTimeMillis()
                                 )
-
-                                // Start monitoring stats
-                                startStatsMonitoring()
+                                if (statsMonitorJob == null) {
+                                    startStatsMonitoring(service)
+                                }
+                            }
+                            ConnectionState.DISCONNECTING -> _vpnState.value = VpnState.Disconnecting
+                            ConnectionState.ERROR -> _vpnState.value = VpnState.Error("VPN connection error")
+                            ConnectionState.IDLE -> {
+                                _vpnState.value = VpnState.Idle
+                                _connectionStats.value = ConnectionStats()
+                                statsMonitorJob?.cancel()
+                                statsMonitorJob = null
                             }
                         }
-                    } catch (e: Exception) {
-                        // Service not ready yet
-                        Timber.d("Waiting for service to be ready...")
                     }
                 }
             } catch (e: Exception) {
@@ -189,68 +173,22 @@ class VpnRepositoryImpl @Inject constructor(
         }
     }
 
-    private fun startStatsMonitoring() {
-        repositoryScope.launch {
-            // Initialize session start time
-            sessionStartTime = System.currentTimeMillis()
-            lastStatsUpdateTime = sessionStartTime
-            lastBytesReceived = 0L
-            lastBytesSent = 0L
-
-            while (isActive && _vpnState.value is VpnState.Connected) {
-                try {
-                    // Get stats from service
-                    val serviceClass = Class.forName("com.synapseguard.vpn.service.core.VpnConnectionService")
-                    val getInstanceMethod = serviceClass.getMethod("getInstance")
-                    val serviceInstance = getInstanceMethod.invoke(null)
-
-                    if (serviceInstance != null) {
-                        val getStatsMethod = serviceClass.getMethod("getConnectionStats")
-                        val statsFlow = getStatsMethod.invoke(serviceInstance)
-
-                        if (statsFlow != null && statsFlow is kotlinx.coroutines.flow.StateFlow<*>) {
-                            val stats = statsFlow.value
-                            if (stats is com.synapseguard.vpn.service.core.ConnectionStats) {
-                                val currentTime = System.currentTimeMillis()
-                                val timeDiffSeconds = (currentTime - lastStatsUpdateTime) / 1000.0
-
-                                // Calculate speeds (bytes per second)
-                                val downloadSpeedBps = if (timeDiffSeconds > 0 && lastStatsUpdateTime > 0) {
-                                    ((stats.bytesReceived - lastBytesReceived) / timeDiffSeconds).toLong()
-                                } else {
-                                    0L
-                                }
-
-                                val uploadSpeedBps = if (timeDiffSeconds > 0 && lastStatsUpdateTime > 0) {
-                                    ((stats.bytesSent - lastBytesSent) / timeDiffSeconds).toLong()
-                                } else {
-                                    0L
-                                }
-
-                                // Update tracking variables
-                                lastBytesReceived = stats.bytesReceived
-                                lastBytesSent = stats.bytesSent
-                                lastStatsUpdateTime = currentTime
-
-                                // Convert service stats to domain stats with speed tracking
-                                _connectionStats.value = ConnectionStats(
-                                    bytesReceived = stats.bytesReceived,
-                                    bytesSent = stats.bytesSent,
-                                    downloadSpeedBps = downloadSpeedBps.coerceAtLeast(0L),
-                                    uploadSpeedBps = uploadSpeedBps.coerceAtLeast(0L),
-                                    sessionStartTime = sessionStartTime,
-                                    duration = if (sessionStartTime > 0) {
-                                        currentTime - sessionStartTime
-                                    } else 0L
-                                )
-                            }
-                        }
-                    }
-                } catch (e: Exception) {
-                    // Service might be stopping
-                }
-
-                delay(1000)  // Update every second
+    private fun startStatsMonitoring(service: VpnConnectionService) {
+        statsMonitorJob?.cancel()
+        statsMonitorJob = repositoryScope.launch {
+            service.getConnectionStats().collect { stats ->
+                val now = System.currentTimeMillis()
+                _connectionStats.value = ConnectionStats(
+                    bytesReceived = stats.bytesReceived,
+                    bytesSent = stats.bytesSent,
+                    packetsReceived = stats.packetsReceived,
+                    packetsSent = stats.packetsSent,
+                    duration = stats.duration,
+                    timestamp = stats.timestamp,
+                    downloadSpeedBps = stats.downloadSpeedBps,
+                    uploadSpeedBps = stats.uploadSpeedBps,
+                    sessionStartTime = if (stats.sessionStartTime > 0) stats.sessionStartTime else now
+                )
             }
         }
     }

@@ -19,7 +19,11 @@ import com.synapseguard.vpn.presentation.stats.StatsScreen
 @Composable
 fun NavGraph(
     navController: NavHostController,
-    snackbarHostState: SnackbarHostState
+    snackbarHostState: SnackbarHostState,
+    vpnPermissionGranted: Boolean,
+    notificationPermissionGranted: Boolean,
+    onRequestVpnPermission: (onPermissionGranted: () -> Unit) -> Unit,
+    onRequestNotificationPermission: () -> Unit
 ) {
     NavHost(
         navController = navController,
@@ -65,7 +69,11 @@ fun NavGraph(
                 onNavigateToStats = {
                     navController.navigate(Screen.Stats.route)
                 },
-                snackbarHostState = snackbarHostState
+                snackbarHostState = snackbarHostState,
+                vpnPermissionGranted = vpnPermissionGranted,
+                notificationPermissionGranted = notificationPermissionGranted,
+                onRequestVpnPermission = onRequestVpnPermission,
+                onRequestNotificationPermission = onRequestNotificationPermission
             )
         }
 
