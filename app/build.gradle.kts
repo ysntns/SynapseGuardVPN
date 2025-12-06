@@ -67,7 +67,7 @@ android {
                         }
                         val keystorePath = releaseKeystoreFile?.path ?: releaseStoreFile.orNull
                         if (keystorePath.isNullOrBlank() || releaseKeystoreFile?.exists() != true) {
-                            add("Keystore not found at ${keystorePath.ifBlank { "<unset>" }}")
+                            add("Keystore not found at ${keystorePath?.ifBlank { "<unset>" } ?: "<unset>"}")
                         }
                     }.joinToString("; ")
 
