@@ -52,14 +52,31 @@ dependencies {
     // Network
     implementation("com.squareup.okhttp3:okhttp:4.12.0")
 
-    // WireGuard (will need native library)
-    // implementation("com.wireguard.android:tunnel:1.0.20230706")
+    // WireGuard Native Library
+    implementation("com.wireguard.android:tunnel:1.0.20230706")
+
+    // Cryptography - Bouncy Castle for ChaCha20-Poly1305, Curve25519, BLAKE2s
+    implementation("org.bouncycastle:bcprov-jdk18on:1.77")
+
+    // OpenVPN - ics-openvpn core
+    implementation("de.blinkt.openvpn:openvpn-core:0.7.46")
+
+    // V2Ray Core
+    implementation("com.github.nickyisexist:libv2ray:1.0.0")
 
     // Timber for logging
     implementation("com.jakewharton.timber:timber:5.0.1")
 
+    // Security - Encrypted Storage
+    implementation("androidx.security:security-crypto:1.1.0-alpha06")
+
     // Testing
     testImplementation("junit:junit:4.13.2")
+    testImplementation("org.mockito:mockito-core:5.7.0")
+    testImplementation("org.mockito.kotlin:mockito-kotlin:5.1.0")
+    testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.7.3")
+    testImplementation("org.jetbrains.kotlin:kotlin-test:1.9.20")
+    testImplementation("io.mockk:mockk:1.13.8")
     androidTestImplementation("androidx.test.ext:junit:1.1.5")
     androidTestImplementation("androidx.test.espresso:espresso-core:3.5.1")
 }
