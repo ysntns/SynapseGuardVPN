@@ -19,5 +19,9 @@
 - VPN and notification permission prompts, state observation, and split tunneling persistence have been verified end-to-end in the app flow.
 - No additional code changes are pending for the 1.1.0 rollout; remaining steps are operational (supplying signing secrets and uploading the artifact).
 
+## Kalan Operasyonel Adımlar ve Tahmini Süre
+- **İmzalama bilgileri**: CI veya yerelde `gradle.properties` / ortam değişkenleri ile keystore yolu ve parolaları sağlandığında, release derlemesi yaklaşık **3-5 dakika** içinde tamamlanır.
+- **Artifact dağıtımı**: CI workflow’u APK’yı üretip yükler; manuel Play Console yükleme ve mağaza incelemesi süreci **1 iş günü** içinde tamamlanacak şekilde planlandı.
+
 ## Privacy
 The app requests VPN permission to create the secure tunnel and POST_NOTIFICATIONS (Android 13+) to surface important connection status updates. No personal data is collected beyond what is required to operate the VPN connection and user-selected preferences.
