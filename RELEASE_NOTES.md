@@ -14,5 +14,10 @@
 - Bölünmüş tünel (split tunneling) seçimleri DataStore üzerinde saklanarak yeniden başlatmalardan sonra da korunuyor.
 - Ön plan VPN servisi bağlantı durumu ve trafik istatistiklerini uygulamaya canlı olarak ileterek kullanıcıya anlık geri bildirim sağlıyor.
 
+## Release Readiness / Yayına Hazırlık
+- Release signing flow is fully wired for CI and local builds; you still need to provide the keystore path and passwords via `gradle.properties` or CI secrets at build time.
+- VPN and notification permission prompts, state observation, and split tunneling persistence have been verified end-to-end in the app flow.
+- No additional code changes are pending for the 1.1.0 rollout; remaining steps are operational (supplying signing secrets and uploading the artifact).
+
 ## Privacy
 The app requests VPN permission to create the secure tunnel and POST_NOTIFICATIONS (Android 13+) to surface important connection status updates. No personal data is collected beyond what is required to operate the VPN connection and user-selected preferences.
