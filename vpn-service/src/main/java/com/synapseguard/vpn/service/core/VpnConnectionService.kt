@@ -393,10 +393,6 @@ class VpnConnectionService : VpnService() {
     init {
         instance = this
     }
-
-    fun getConnectionState(): StateFlow<ConnectionState> = connectionState
-
-    fun getConnectionStats(): StateFlow<ServiceConnectionStats> = connectionStats
 }
 
 enum class ConnectionState {
