@@ -42,7 +42,7 @@ class SubscriptionRepositoryImpl @Inject constructor(
         tier != SubscriptionTier.FREE
     }
 
-    override suspend fun setSubscriptionTier(tier: SubscriptionTier) = withContext(ioDispatcher) {
+    override suspend fun setSubscriptionTier(tier: SubscriptionTier): Unit = withContext(ioDispatcher) {
         context.subscriptionDataStore.edit { preferences ->
             preferences[SUBSCRIPTION_TIER_KEY] = tier.name
         }

@@ -151,6 +151,29 @@ For detailed project structure, see [PROJECT_STRUCTURE.md](PROJECT_STRUCTURE.md)
    ./gradlew installDebug
    ```
 
+## Release signing (do not use `local.properties`)
+
+- Keep **only** your Android SDK path in `local.properties`. Store no keystore credentials there.
+- Add release keystore details to `gradle.properties` (not committed) or export them as environment variables when invoking Gradle:
+  ```properties
+  # gradle.properties (local only)
+  releaseStoreFile=/absolute/path/to/release.keystore
+  releaseStorePassword=your-store-password
+  releaseKeyAlias=your-key-alias
+  releaseKeyPassword=your-key-password
+  ```
+- Alternatively, set environment variables to avoid touching files:
+  ```bash
+  export RELEASE_STORE_FILE=/absolute/path/to/release.keystore
+  export RELEASE_STORE_PASSWORD=your-store-password
+  export RELEASE_KEY_ALIAS=your-key-alias
+  export RELEASE_KEY_PASSWORD=your-key-password
+  ./gradlew assembleRelease
+  ```
+- CI pipeline expectations:
+  - Provide a base64-encoded keystore secret as `RELEASE_KEYSTORE_BASE64` and passwords/alias as `RELEASE_STORE_PASSWORD`, `RELEASE_KEY_ALIAS`, `RELEASE_KEY_PASSWORD`.
+  - The workflow decodes the keystore to `.signing/release.keystore` and injects the above values into `gradle.properties` for the build job.
+
 ## Development
 
 ### Building

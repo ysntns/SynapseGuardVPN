@@ -2,6 +2,7 @@ package com.synapseguard.vpn.presentation.stats
 
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
@@ -304,7 +305,7 @@ private fun SpeedBar(
             Box(
                 modifier = Modifier
                     .fillMaxSize()
-                    .androidx.compose.foundation.background(BackgroundSecondary)
+                    .background(BackgroundSecondary)
             )
 
             // Progress
@@ -312,7 +313,7 @@ private fun SpeedBar(
                 modifier = Modifier
                     .fillMaxWidth(progress)
                     .fillMaxHeight()
-                    .androidx.compose.foundation.background(color)
+                    .background(color)
             )
         }
     }
@@ -350,7 +351,7 @@ private fun RealTimeSpeedGraphCard(
                     Box(
                         modifier = Modifier
                             .size(12.dp)
-                            .androidx.compose.foundation.background(ChartDownload)
+                            .background(ChartDownload)
                     )
                     Spacer(modifier = Modifier.width(4.dp))
                     Text(
@@ -363,7 +364,7 @@ private fun RealTimeSpeedGraphCard(
                     Box(
                         modifier = Modifier
                             .size(12.dp)
-                            .androidx.compose.foundation.background(ChartUpload)
+                            .background(ChartUpload)
                     )
                     Spacer(modifier = Modifier.width(4.dp))
                     Text(

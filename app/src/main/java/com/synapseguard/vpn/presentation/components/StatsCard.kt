@@ -1,5 +1,6 @@
 package com.synapseguard.vpn.presentation.components
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -44,11 +45,11 @@ fun StatsCard(
                 color = StatusConnected
             )
 
-            VerticalDivider(
+            Box(
                 modifier = Modifier
                     .height(60.dp)
-                    .width(1.dp),
-                color = SurfaceSelected
+                    .width(1.dp)
+                    .background(SurfaceSelected)
             )
 
             // Upload stats

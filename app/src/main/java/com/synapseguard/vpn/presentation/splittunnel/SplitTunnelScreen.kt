@@ -185,6 +185,13 @@ private fun AppListItem(
             containerColor = BackgroundCard
         )
     ) {
+        val appIconBitmap = remember(app.packageName) {
+            runCatching {
+                val appIcon = packageManager.getApplicationIcon(app.packageName)
+                appIcon.toBitmap(48, 48)
+            }.getOrNull()
+        }
+
         Row(
             modifier = Modifier
                 .fillMaxWidth()
@@ -198,22 +205,18 @@ private fun AppListItem(
                 modifier = Modifier.weight(1f)
             ) {
                 // App icon
-                try {
-                    val appIcon = packageManager.getApplicationIcon(app.packageName)
-                    val bitmap = appIcon.toBitmap(48, 48)
+                appIconBitmap?.let { bitmap ->
                     Image(
                         bitmap = bitmap.asImageBitmap(),
                         contentDescription = null,
                         modifier = Modifier.size(40.dp)
                     )
-                } catch (e: Exception) {
-                    Icon(
-                        Icons.Default.Android,
-                        contentDescription = null,
-                        tint = TextSecondary,
-                        modifier = Modifier.size(40.dp)
-                    )
-                }
+                } ?: Icon(
+                    Icons.Default.Android,
+                    contentDescription = null,
+                    tint = TextSecondary,
+                    modifier = Modifier.size(40.dp)
+                )
 
                 Column {
                     Text(

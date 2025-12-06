@@ -6,6 +6,7 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.core.content.ContextCompat
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
@@ -36,6 +37,14 @@ class MainActivity : ComponentActivity() {
     // VPN permission state
     private val vpnPermissionGranted = mutableStateOf(false)
     private var pendingVpnConnection: (() -> Unit)? = null
+    private val notificationPermissionGranted = mutableStateOf(false)
+
+    private val notificationPermissionLauncher = registerForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ) { granted ->
+        notificationPermissionGranted.value = granted
+        Timber.d("Notification permission granted=$granted")
+    }
 
     // VPN permission launcher
     private val vpnPermissionLauncher = registerForActivityResult(
@@ -58,6 +67,7 @@ class MainActivity : ComponentActivity() {
 
         // Check initial VPN permission state
         checkVpnPermission()
+        checkNotificationPermission()
 
         setContent {
             SynapseGuardVPNTheme {
@@ -66,7 +76,11 @@ class MainActivity : ComponentActivity() {
 
                 MainScaffold(
                     navController = navController,
-                    snackbarHostState = snackbarHostState
+                    snackbarHostState = snackbarHostState,
+                    vpnPermissionGranted = vpnPermissionGranted.value,
+                    notificationPermissionGranted = notificationPermissionGranted.value,
+                    onRequestVpnPermission = ::requestVpnPermission,
+                    onRequestNotificationPermission = { requestNotificationPermission() }
                 )
             }
         }
@@ -87,6 +101,14 @@ class MainActivity : ComponentActivity() {
         Timber.d("VPN permission check: ${vpnPermissionGranted.value}")
     }
 
+    private fun checkNotificationPermission() {
+        val status = ContextCompat.checkSelfPermission(
+            this,
+            android.Manifest.permission.POST_NOTIFICATIONS
+        )
+        notificationPermissionGranted.value = status == android.content.pm.PackageManager.PERMISSION_GRANTED
+    }
+
     /**
      * Request VPN permission and execute callback when granted
      */
@@ -103,27 +125,11 @@ class MainActivity : ComponentActivity() {
         }
     }
 
-    companion object {
-        // Static reference to MainActivity for accessing permission request
-        // This is a simple approach - in production, use a better DI solution
-        private var instance: MainActivity? = null
+    fun requestNotificationPermission() {
+        if (notificationPermissionGranted.value) return
 
-        fun getInstance(): MainActivity? = instance
-
-        fun requestVpnPermissionStatic(onGranted: () -> Unit) {
-            instance?.requestVpnPermission(onGranted)
-        }
-    }
-
-    override fun onStart() {
-        super.onStart()
-        instance = this
-    }
-
-    override fun onStop() {
-        super.onStop()
-        if (instance == this) {
-            instance = null
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.TIRAMISU) {
+            notificationPermissionLauncher.launch(android.Manifest.permission.POST_NOTIFICATIONS)
         }
     }
 }
@@ -134,7 +140,11 @@ class MainActivity : ComponentActivity() {
 @Composable
 private fun MainScaffold(
     navController: NavHostController,
-    snackbarHostState: SnackbarHostState
+    snackbarHostState: SnackbarHostState,
+    vpnPermissionGranted: Boolean,
+    notificationPermissionGranted: Boolean,
+    onRequestVpnPermission: (onPermissionGranted: () -> Unit) -> Unit,
+    onRequestNotificationPermission: () -> Unit
 ) {
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentDestination = navBackStackEntry?.destination
@@ -182,7 +192,11 @@ private fun MainScaffold(
         ) {
             NavGraph(
                 navController = navController,
-                snackbarHostState = snackbarHostState
+                snackbarHostState = snackbarHostState,
+                vpnPermissionGranted = vpnPermissionGranted,
+                notificationPermissionGranted = notificationPermissionGranted,
+                onRequestVpnPermission = onRequestVpnPermission,
+                onRequestNotificationPermission = onRequestNotificationPermission
             )
         }
     }

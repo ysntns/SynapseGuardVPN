@@ -13,12 +13,73 @@ android {
         applicationId = "com.synapseguard.vpn"
         minSdk = 26
         targetSdk = 35
-        versionCode = 1
-        versionName = "1.0.0"
+        versionCode = 2
+        versionName = "1.1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
             useSupportLibrary = true
+        }
+    }
+
+    signingConfigs {
+        val releaseStoreFile = providers.gradleProperty("releaseStoreFile")
+            .orElse(providers.environmentVariable("RELEASE_STORE_FILE"))
+        val releaseStorePassword = providers.gradleProperty("releaseStorePassword")
+            .orElse(providers.environmentVariable("RELEASE_STORE_PASSWORD"))
+        val releaseKeyAlias = providers.gradleProperty("releaseKeyAlias")
+            .orElse(providers.environmentVariable("RELEASE_KEY_ALIAS"))
+        val releaseKeyPassword = providers.gradleProperty("releaseKeyPassword")
+            .orElse(providers.environmentVariable("RELEASE_KEY_PASSWORD"))
+        val runningReleaseTask = gradle.startParameter.taskNames.any {
+            it.contains("Release", ignoreCase = true)
+        }
+
+        val releaseProperties = mapOf(
+            "releaseStoreFile" to releaseStoreFile,
+            "releaseStorePassword" to releaseStorePassword,
+            "releaseKeyAlias" to releaseKeyAlias,
+            "releaseKeyPassword" to releaseKeyPassword
+        )
+
+        val releaseKeystoreFile = releaseStoreFile.orNull
+            ?.takeIf { it.isNotBlank() }
+            ?.let { file(it) }
+
+        create("release") {
+            val missingKeys = releaseProperties
+                .filterValues { !it.isPresent || it.get().isBlank() }
+                .keys
+            val hasValidReleaseKeystore = missingKeys.isEmpty() &&
+                releaseKeystoreFile?.exists() == true
+
+            if (hasValidReleaseKeystore) {
+                storeFile = releaseKeystoreFile
+                storePassword = releaseStorePassword.get()
+                keyAlias = releaseKeyAlias.get()
+                keyPassword = releaseKeyPassword.get()
+            } else {
+                initWith(signingConfigs.getByName("debug"))
+                if (runningReleaseTask) {
+                    val reasons = buildList {
+                        if (missingKeys.isNotEmpty()) {
+                            add("Missing properties: ${missingKeys.joinToString()}")
+                        }
+                        val keystorePath = releaseKeystoreFile?.path ?: releaseStoreFile.orNull
+                        if (keystorePath.isNullOrBlank() || releaseKeystoreFile?.exists() != true) {
+                            add("Keystore not found at ${keystorePath.ifBlank { "<unset>" }}")
+                        }
+                    }.joinToString("; ")
+
+                    throw GradleException(
+                        "Release signing config is missing or invalid ($reasons). Provide releaseStoreFile/releaseStorePassword/releaseKeyAlias/releaseKeyPassword in gradle.properties or CI environment variables and ensure the keystore file exists."
+                    )
+                } else {
+                    logger.warn(
+                        "Release signing config not provided; using debug signing for non-release tasks. Missing: ${missingKeys.joinToString()}"
+                    )
+                }
+            }
         }
     }
 
@@ -29,6 +90,7 @@ android {
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
+            signingConfig = signingConfigs.getByName("release")
         }
         debug {
             isMinifyEnabled = false

@@ -43,9 +43,14 @@ class HomeViewModel @Inject constructor(
         // Observe VPN state
         viewModelScope.launch {
             observeVpnStateUseCase().collect { state ->
+                val current = _uiState.value
                 _uiState.value = _uiState.value.copy(
                     vpnState = state,
-                    isLoading = state is VpnState.Connecting || state is VpnState.Disconnecting
+                    isLoading = state is VpnState.Connecting || state is VpnState.Disconnecting,
+                    error = when (state) {
+                        is VpnState.Error -> state.message
+                        else -> current.error
+                    }
                 )
             }
         }
@@ -59,16 +64,7 @@ class HomeViewModel @Inject constructor(
     }
 
     fun onConnectClick() {
-        // Request VPN permission first
-        try {
-            com.synapseguard.vpn.presentation.MainActivity.requestVpnPermissionStatic {
-                // Permission granted, proceed with connection
-                connectToVpn()
-            }
-        } catch (e: Exception) {
-            // Fallback: just try to connect directly
-            connectToVpn()
-        }
+        connectToVpn()
     }
 
     private fun connectToVpn() {
@@ -91,6 +87,11 @@ class HomeViewModel @Inject constructor(
             }
 
             Timber.d("Connecting to ${server.name}")
+
+            _uiState.value = _uiState.value.copy(
+                selectedServer = server,
+                error = null
+            )
 
             // Get current settings from repository
             val settings = try {

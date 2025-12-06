@@ -10,7 +10,6 @@ import android.os.Build
 import android.os.ParcelFileDescriptor
 import android.system.OsConstants
 import androidx.core.app.NotificationCompat
-import com.synapseguard.vpn.domain.model.ConnectionStats
 import com.synapseguard.vpn.service.wireguard.WireGuardHandler
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -36,8 +35,8 @@ class VpnConnectionService : VpnService() {
     private val _connectionState = MutableStateFlow(ConnectionState.IDLE)
     val connectionState: StateFlow<ConnectionState> = _connectionState.asStateFlow()
 
-    private val _connectionStats = MutableStateFlow(ConnectionStats())
-    val connectionStats: StateFlow<ConnectionStats> = _connectionStats.asStateFlow()
+    private val _connectionStats = MutableStateFlow(ServiceConnectionStats())
+    val connectionStats: StateFlow<ServiceConnectionStats> = _connectionStats.asStateFlow()
 
     // Configuration
     private var serverAddress: String = ""
@@ -46,6 +45,7 @@ class VpnConnectionService : VpnService() {
     private var enableSplitTunneling: Boolean = false
     private var excludedApps: List<String> = emptyList()
     private var dnsServers: List<String> = listOf("1.1.1.1", "1.0.0.1")
+    private var sessionStartTime: Long = 0L
 
     override fun onCreate() {
         super.onCreate()
@@ -143,7 +143,13 @@ class VpnConnectionService : VpnService() {
                 )
 
                 if (result?.isSuccess == true) {
+                    sessionStartTime = System.currentTimeMillis()
                     _connectionState.value = ConnectionState.CONNECTED
+                    _connectionStats.value = _connectionStats.value.copy(
+                        sessionStartTime = sessionStartTime,
+                        timestamp = sessionStartTime,
+                        duration = 0L
+                    )
                     updateNotification("Connected")
 
                     // Start packet forwarding
@@ -191,9 +197,12 @@ class VpnConnectionService : VpnService() {
 
                         if (length > 0) {
                             // Update sent bytes
+                            val updatedTimestamp = System.currentTimeMillis()
                             _connectionStats.value = _connectionStats.value.copy(
                                 bytesSent = _connectionStats.value.bytesSent + length,
-                                packetsSent = _connectionStats.value.packetsSent + 1
+                                packetsSent = _connectionStats.value.packetsSent + 1,
+                                timestamp = updatedTimestamp,
+                                duration = (updatedTimestamp - sessionStartTime).coerceAtLeast(0)
                             )
 
                             // Forward to server (in real implementation)
@@ -205,9 +214,12 @@ class VpnConnectionService : VpnService() {
                             outputStream.write(buffer.array(), 0, length)
 
                             // Update received bytes
+                            val updatedTimestamp = System.currentTimeMillis()
                             _connectionStats.value = _connectionStats.value.copy(
                                 bytesReceived = _connectionStats.value.bytesReceived + length,
-                                packetsReceived = _connectionStats.value.packetsReceived + 1
+                                packetsReceived = _connectionStats.value.packetsReceived + 1,
+                                timestamp = updatedTimestamp,
+                                duration = (updatedTimestamp - sessionStartTime).coerceAtLeast(0)
                             )
                         }
 
@@ -250,9 +262,12 @@ class VpnConnectionService : VpnService() {
                     val uploadSpeed = ((currentStats.bytesSent - lastBytesSent) / elapsedSeconds).toLong()
                     val downloadSpeed = ((currentStats.bytesReceived - lastBytesReceived) / elapsedSeconds).toLong()
 
+                    val updatedTimestamp = System.currentTimeMillis()
                     _connectionStats.value = currentStats.copy(
                         uploadSpeedBps = uploadSpeed,
-                        downloadSpeedBps = downloadSpeed
+                        downloadSpeedBps = downloadSpeed,
+                        timestamp = updatedTimestamp,
+                        duration = (updatedTimestamp - sessionStartTime).coerceAtLeast(0)
                     )
 
                     lastBytesSent = currentStats.bytesSent
@@ -286,7 +301,8 @@ class VpnConnectionService : VpnService() {
                 vpnInterface = null
 
                 _connectionState.value = ConnectionState.IDLE
-                _connectionStats.value = ConnectionStats()
+                _connectionStats.value = ServiceConnectionStats()
+                sessionStartTime = 0L
 
                 Timber.d("VPN interface closed")
             } catch (e: Exception) {
@@ -303,6 +319,7 @@ class VpnConnectionService : VpnService() {
         serviceScope.cancel()
         super.onDestroy()
         Timber.d("VpnConnectionService destroyed")
+        instance = null
     }
 
     override fun onRevoke() {
@@ -376,6 +393,10 @@ class VpnConnectionService : VpnService() {
     init {
         instance = this
     }
+
+    fun getConnectionState(): StateFlow<ConnectionState> = connectionState
+
+    fun getConnectionStats(): StateFlow<ServiceConnectionStats> = connectionStats
 }
 
 enum class ConnectionState {
@@ -384,4 +405,22 @@ enum class ConnectionState {
     CONNECTED,
     DISCONNECTING,
     ERROR
+}
+
+data class ServiceConnectionStats(
+    val bytesReceived: Long = 0L,
+    val bytesSent: Long = 0L,
+    val packetsReceived: Long = 0L,
+    val packetsSent: Long = 0L,
+    val duration: Long = 0L,
+    val timestamp: Long = System.currentTimeMillis(),
+    val downloadSpeedBps: Long = 0L,
+    val uploadSpeedBps: Long = 0L,
+    val sessionStartTime: Long = 0L
+) {
+    val totalBytes: Long
+        get() = bytesReceived + bytesSent
+
+    val totalPackets: Long
+        get() = packetsReceived + packetsSent
 }

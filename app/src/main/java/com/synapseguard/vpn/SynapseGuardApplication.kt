@@ -1,6 +1,7 @@
 package com.synapseguard.vpn
 
 import android.app.Application
+import com.synapseguard.vpn.BuildConfig
 import dagger.hilt.android.HiltAndroidApp
 import timber.log.Timber
 

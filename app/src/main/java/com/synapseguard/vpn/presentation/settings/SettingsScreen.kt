@@ -319,7 +319,7 @@ private fun SubscriptionCard(
         modifier = Modifier.fillMaxWidth(),
         colors = CardDefaults.cardColors(
             containerColor = if (isPremiumUser) {
-                BackgroundAccent.copy(alpha = 0.2f)
+                SurfaceSelected
             } else {
                 BackgroundSecondary
             }
@@ -375,7 +375,7 @@ private fun SubscriptionCard(
             }
 
             if (!isPremiumUser) {
-                HorizontalDivider(color = DividerColor)
+                HorizontalDivider(color = BorderPrimary)
 
                 Button(
                     onClick = { /* TODO: Navigate to subscription/purchase screen */ },
