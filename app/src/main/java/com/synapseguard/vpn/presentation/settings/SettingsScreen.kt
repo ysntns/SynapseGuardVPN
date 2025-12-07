@@ -1,5 +1,6 @@
 package com.synapseguard.vpn.presentation.settings
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
@@ -267,11 +268,12 @@ private fun ProtocolSelectionCard(
     onProtocolClick: () -> Unit
 ) {
     Card(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable { onProtocolClick() },
         colors = CardDefaults.cardColors(
             containerColor = BackgroundSecondary
-        ),
-        onClick = onProtocolClick
+        )
     ) {
         Row(
             modifier = Modifier
@@ -375,7 +377,7 @@ private fun SubscriptionCard(
             }
 
             if (!isPremiumUser) {
-                HorizontalDivider(color = DividerColor)
+                Divider(color = DividerColor)
 
                 Button(
                     onClick = { /* TODO: Navigate to subscription/purchase screen */ },

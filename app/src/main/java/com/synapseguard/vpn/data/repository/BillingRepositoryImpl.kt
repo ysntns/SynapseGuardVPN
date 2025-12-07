@@ -123,10 +123,10 @@ class BillingRepositoryImpl @Inject constructor(
                 .setProductList(productList)
                 .build()
 
-            val productDetailsResult = suspendCancellableCoroutine { continuation ->
+            val productDetailsResult = suspendCancellableCoroutine<List<ProductDetails>> { continuation ->
                 billingClient.queryProductDetailsAsync(params) { billingResult, productDetailsList ->
                     if (billingResult.responseCode == BillingClient.BillingResponseCode.OK) {
-                        continuation.resume(productDetailsList)
+                        continuation.resume(productDetailsList ?: emptyList())
                     } else {
                         Timber.e("Failed to query products: ${billingResult.debugMessage}")
                         continuation.resume(emptyList())
