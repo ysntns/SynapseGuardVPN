@@ -49,6 +49,10 @@ val BorderPrimary = Color(0x33FFFFFF)              // 20% White - Default border
 val BorderAccent = Color(0xFF00D9FF)               // Cyan - Active borders
 val BorderSelected = Color(0xFF00F0FF)             // Bright cyan - Selected state
 
+// Additional Colors
+val BackgroundAccent = Color(0xFF1A3A4A)           // Accent background
+val DividerColor = Color(0x33FFFFFF)               // Divider color (20% white)
+
 // Gradient Colors for Animations
 val GradientStart = Color(0xFF0A0E1A)              // Dark blue/black
 val GradientMiddle = Color(0xFF00D9FF)             // Cyan

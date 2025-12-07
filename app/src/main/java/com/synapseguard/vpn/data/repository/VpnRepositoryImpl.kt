@@ -144,7 +144,7 @@ class VpnRepositoryImpl @Inject constructor(
                     }
 
                     Timber.d("VpnConnectionService instance acquired, observing state")
-                    service.getConnectionState().collect { state ->
+                    service.connectionState.collect { state ->
                         when (state) {
                             ConnectionState.CONNECTING -> _vpnState.value = VpnState.Connecting
                             ConnectionState.CONNECTED -> {
@@ -176,7 +176,7 @@ class VpnRepositoryImpl @Inject constructor(
     private fun startStatsMonitoring(service: VpnConnectionService) {
         statsMonitorJob?.cancel()
         statsMonitorJob = repositoryScope.launch {
-            service.getConnectionStats().collect { stats ->
+            service.connectionStats.collect { stats ->
                 val now = System.currentTimeMillis()
                 _connectionStats.value = ConnectionStats(
                     bytesReceived = stats.bytesReceived,

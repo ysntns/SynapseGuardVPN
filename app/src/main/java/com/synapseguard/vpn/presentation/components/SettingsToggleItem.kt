@@ -1,5 +1,6 @@
 package com.synapseguard.vpn.presentation.components
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
@@ -89,11 +90,12 @@ fun SettingsActionItem(
     modifier: Modifier = Modifier
 ) {
     Card(
-        modifier = modifier.fillMaxWidth(),
+        modifier = modifier
+            .fillMaxWidth()
+            .clickable { onClick() },
         colors = CardDefaults.cardColors(
             containerColor = BackgroundSecondary
-        ),
-        onClick = onClick
+        )
     ) {
         Row(
             modifier = Modifier

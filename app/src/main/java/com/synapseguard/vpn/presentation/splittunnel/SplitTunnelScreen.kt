@@ -198,15 +198,22 @@ private fun AppListItem(
                 modifier = Modifier.weight(1f)
             ) {
                 // App icon
-                try {
-                    val appIcon = packageManager.getApplicationIcon(app.packageName)
-                    val bitmap = appIcon.toBitmap(48, 48)
+                val appIconBitmap = remember(app.packageName) {
+                    try {
+                        val appIcon = packageManager.getApplicationIcon(app.packageName)
+                        appIcon.toBitmap(48, 48).asImageBitmap()
+                    } catch (e: Exception) {
+                        null
+                    }
+                }
+
+                if (appIconBitmap != null) {
                     Image(
-                        bitmap = bitmap.asImageBitmap(),
+                        bitmap = appIconBitmap,
                         contentDescription = null,
                         modifier = Modifier.size(40.dp)
                     )
-                } catch (e: Exception) {
+                } else {
                     Icon(
                         Icons.Default.Android,
                         contentDescription = null,

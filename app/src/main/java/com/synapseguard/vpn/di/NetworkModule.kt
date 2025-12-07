@@ -1,6 +1,5 @@
 package com.synapseguard.vpn.di
 
-import com.synapseguard.vpn.BuildConfig
 import com.synapseguard.vpn.data.remote.VpnApiService
 import dagger.Module
 import dagger.Provides
@@ -22,12 +21,20 @@ object NetworkModule {
     @Provides
     @Singleton
     fun provideOkHttpClient(): OkHttpClient {
+        val isDebug = try {
+            Class.forName("com.synapseguard.vpn.BuildConfig")
+                .getField("DEBUG")
+                .getBoolean(null)
+        } catch (e: Exception) {
+            false
+        }
+
         return OkHttpClient.Builder()
             .connectTimeout(30, TimeUnit.SECONDS)
             .readTimeout(30, TimeUnit.SECONDS)
             .writeTimeout(30, TimeUnit.SECONDS)
             .apply {
-                if (BuildConfig.DEBUG) {
+                if (isDebug) {
                     addInterceptor(HttpLoggingInterceptor().apply {
                         level = HttpLoggingInterceptor.Level.BODY
                     })

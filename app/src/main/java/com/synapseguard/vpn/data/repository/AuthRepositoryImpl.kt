@@ -10,7 +10,9 @@ import com.synapseguard.vpn.domain.model.User
 import com.synapseguard.vpn.domain.repository.AuthRepository
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.first
@@ -39,7 +41,7 @@ class AuthRepositoryImpl @Inject constructor(
 
     init {
         // Load current user from DataStore on init
-        kotlinx.coroutines.CoroutineScope(ioDispatcher).launch {
+        CoroutineScope(ioDispatcher).launch {
             loadCurrentUser()
         }
     }
