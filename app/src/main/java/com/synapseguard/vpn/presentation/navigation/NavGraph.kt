@@ -63,17 +63,9 @@ fun NavGraph(
                 onNavigateToServers = {
                     navController.navigate(Screen.Servers.route)
                 },
-                onNavigateToSettings = {
-                    navController.navigate(Screen.Settings.route)
-                },
-                onNavigateToStats = {
-                    navController.navigate(Screen.Stats.route)
-                },
                 snackbarHostState = snackbarHostState,
                 vpnPermissionGranted = vpnPermissionGranted,
-                notificationPermissionGranted = notificationPermissionGranted,
-                onRequestVpnPermission = onRequestVpnPermission,
-                onRequestNotificationPermission = onRequestNotificationPermission
+                onRequestVpnPermission = onRequestVpnPermission
             )
         }
 

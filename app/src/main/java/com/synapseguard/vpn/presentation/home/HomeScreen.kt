@@ -237,8 +237,8 @@ private fun ServerInfoCard(
                 )
                 Spacer(modifier = Modifier.height(4.dp))
                 Text(
-                    text = if (isConnected) vpnState.localIp else (selectedServer?.city ?: "Tap to choose"),
-                    color = TextSecondary,
+                    text = if (isConnected) "Connected" else (selectedServer?.city ?: "Tap to choose"),
+                    color = if (isConnected) StatusConnected else TextSecondary,
                     fontSize = 14.sp
                 )
             }

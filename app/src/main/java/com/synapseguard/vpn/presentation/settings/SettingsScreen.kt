@@ -43,6 +43,7 @@ import com.synapseguard.vpn.presentation.theme.TextPrimary
 fun SettingsScreen(
     onNavigateBack: () -> Unit,
     onNavigateToSplitTunnel: () -> Unit = {},
+    onNavigateToLogin: () -> Unit = {},
     viewModel: SettingsViewModel = hiltViewModel(),
 ) {
     val uiState by viewModel.uiState.collectAsState()
