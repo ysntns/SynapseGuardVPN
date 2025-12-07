@@ -91,6 +91,7 @@ fun SettingsScreen(
             Spacer(modifier = Modifier.height(8.dp))
             SettingsToggleItem(
                 title = "Kill Switch",
+                description = "Block internet if VPN disconnects",
                 icon = Icons.Default.Security,
                 iconTint = IconRed,
                 checked = uiState.settings.killSwitch,
@@ -105,6 +106,7 @@ fun SettingsScreen(
             Spacer(modifier = Modifier.height(8.dp))
             SettingsToggleItem(
                 title = "DNS Leak Protection",
+                description = "Prevent DNS queries from leaking",
                 icon = Icons.Default.Dns,
                 checked = true, // Always on
                 onCheckedChange = {}
@@ -117,6 +119,7 @@ fun SettingsScreen(
             Spacer(modifier = Modifier.height(8.dp))
             SettingsToggleItem(
                 title = "Auto-Connect",
+                description = "Connect VPN automatically on app start",
                 icon = Icons.Default.PowerSettingsNew,
                 checked = uiState.settings.autoConnect,
                 onCheckedChange = viewModel::updateAutoConnect
@@ -137,6 +140,7 @@ fun SettingsScreen(
             Spacer(modifier = Modifier.height(8.dp))
             SettingsToggleItem(
                 title = "Send Diagnostic Logs",
+                description = "Help us improve the app",
                 icon = Icons.Default.Warning,
                 checked = false, // Add to settings
                 onCheckedChange = {}
