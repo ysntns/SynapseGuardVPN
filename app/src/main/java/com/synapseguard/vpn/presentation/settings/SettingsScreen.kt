@@ -1,37 +1,50 @@
 package com.synapseguard.vpn.presentation.settings
 
-import androidx.compose.foundation.clickable
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.*
+import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.Dns
+import androidx.compose.material.icons.filled.Info
+import androidx.compose.material.icons.filled.PowerSettingsNew
+import androidx.compose.material.icons.filled.Security
+import androidx.compose.material.icons.filled.Splitscreen
+import androidx.compose.material.icons.filled.Storage
+import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
-import com.synapseguard.vpn.domain.model.SubscriptionTier
-import com.synapseguard.vpn.presentation.auth.AuthViewModel
-import com.synapseguard.vpn.presentation.components.SettingsActionItem
+import com.synapseguard.vpn.domain.model.VpnProtocol
 import com.synapseguard.vpn.presentation.components.SettingsToggleItem
-import com.synapseguard.vpn.presentation.theme.*
+import com.synapseguard.vpn.presentation.theme.BackgroundPrimary
+import com.synapseguard.vpn.presentation.theme.CyanPrimary
+import com.synapseguard.vpn.presentation.theme.IconRed
+import com.synapseguard.vpn.presentation.theme.TextPrimary
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SettingsScreen(
     onNavigateBack: () -> Unit,
     onNavigateToSplitTunnel: () -> Unit = {},
-    onNavigateToLogin: () -> Unit = {},
     viewModel: SettingsViewModel = hiltViewModel(),
-    authViewModel: AuthViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
-    val authState by authViewModel.uiState.collectAsState()
+    var selectedProtocol by remember { mutableStateOf(uiState.settings.preferredProtocol) }
 
     Scaffold(
         containerColor = BackgroundPrimary,
@@ -40,213 +53,99 @@ fun SettingsScreen(
                 title = {
                     Text(
                         "Settings",
-                        color = TextPrimary
+                        textAlign = TextAlign.Center,
+                        modifier = Modifier.fillMaxWidth(),
+                        color = TextPrimary,
+                        fontWeight = FontWeight.Bold
                     )
                 },
+                navigationIcon = {
+                    IconButton(onClick = onNavigateBack) {
+                        Icon(Icons.Default.ArrowBack, contentDescription = "Back", tint = TextPrimary)
+                    }
+                },
+                actions = {
+                    IconButton(onClick = { /* TODO: Search */ }) {
+                        Icon(Icons.Default.Info, contentDescription = "Search", tint = TextPrimary)
+                    }
+                },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = BackgroundSecondary
+                    containerColor = Color.Transparent
                 )
             )
         }
     ) { paddingValues ->
-        LazyColumn(
+        Column(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(paddingValues)
-                .padding(horizontal = 16.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp)
+                .padding(horizontal = 16.dp)
+                .verticalScroll(rememberScrollState())
         ) {
-            item { Spacer(modifier = Modifier.height(8.dp)) }
+            Spacer(modifier = Modifier.height(16.dp))
 
-            // Security Features Section
-            item {
-                SectionHeader(title = "Security Features")
-            }
+            // Security Features
+            SectionHeader(title = "Security Features")
+            Spacer(modifier = Modifier.height(8.dp))
+            SettingsToggleItem(
+                title = "Kill Switch",
+                icon = Icons.Default.Security,
+                iconTint = IconRed,
+                checked = uiState.settings.killSwitch,
+                onCheckedChange = viewModel::updateKillSwitch
+            )
+            Spacer(modifier = Modifier.height(8.dp))
+            SettingsItem(
+                title = "Split Tunneling",
+                icon = Icons.Default.Splitscreen,
+                onClick = onNavigateToSplitTunnel
+            )
+            Spacer(modifier = Modifier.height(8.dp))
+            SettingsToggleItem(
+                title = "DNS Leak Protection",
+                icon = Icons.Default.Dns,
+                checked = true, // Always on
+                onCheckedChange = {}
+            )
 
-            item {
-                SettingsToggleItem(
-                    title = "Kill Switch",
-                    description = "Block internet if VPN disconnects",
-                    icon = Icons.Default.Security,
-                    iconTint = IconRed,
-                    checked = uiState.settings.killSwitch,
-                    onCheckedChange = { viewModel.updateKillSwitch(it) }
-                )
-            }
+            Spacer(modifier = Modifier.height(24.dp))
 
-            item {
-                SettingsActionItem(
-                    title = "Split Tunneling",
-                    description = "Choose apps to bypass VPN",
-                    icon = Icons.Default.CallSplit,
-                    iconTint = CyanPrimary,
-                    onClick = onNavigateToSplitTunnel
-                )
-            }
-
-            item {
-                SettingsToggleItem(
-                    title = "DNS Leak Protection",
-                    description = "Prevent DNS queries from leaking",
-                    icon = Icons.Default.Lock,
-                    iconTint = IconBlue,
-                    checked = true, // Always enabled
-                    onCheckedChange = { /* Always on */ }
-                )
-            }
-
-            // Connection Options Section
-            item {
-                Spacer(modifier = Modifier.height(8.dp))
-                SectionHeader(title = "Connection Options")
-            }
-
-            item {
-                SettingsToggleItem(
-                    title = "Auto-Connect",
-                    description = "Connect VPN automatically on app start",
-                    icon = Icons.Default.PowerSettingsNew,
-                    iconTint = IconAccent,
-                    checked = uiState.settings.autoConnect,
-                    onCheckedChange = { viewModel.updateAutoConnect(it) }
-                )
-            }
-
-            item {
-                SettingsToggleItem(
-                    title = "Auto-Connect on Boot",
-                    description = "Connect VPN when device starts",
-                    icon = Icons.Default.PhoneAndroid,
-                    iconTint = IconAccent,
-                    checked = false, // TODO: Add to settings
-                    onCheckedChange = { /* TODO */ }
-                )
-            }
-
-            item {
-                ProtocolSelectionCard(
-                    currentProtocol = uiState.settings.preferredProtocol.name,
-                    onProtocolClick = { /* TODO: Show protocol selector */ }
-                )
-            }
-
-            // Advanced Section
-            item {
-                Spacer(modifier = Modifier.height(8.dp))
-                SectionHeader(title = "Advanced")
-            }
-
-            item {
-                SettingsActionItem(
-                    title = "Send Diagnostic Logs",
-                    description = "Help us improve the app",
-                    icon = Icons.Default.Warning,
-                    iconTint = IconYellow,
-                    onClick = { /* TODO: Send logs */ }
-                )
-            }
-
-            item {
-                SettingsActionItem(
-                    title = "Connection Log",
-                    description = "View detailed connection history",
-                    icon = Icons.Default.Storage,
-                    iconTint = IconBlue,
-                    onClick = { /* TODO: Show connection log */ }
-                )
-            }
-
-            item {
-                SettingsActionItem(
-                    title = "About SynapseGuard",
-                    description = "Version 1.0.0 • BCI-Optimized VPN",
-                    icon = Icons.Default.Info,
-                    iconTint = IconAccent,
-                    onClick = { /* TODO: Show about screen */ }
-                )
-            }
-
-            // Account Section
-            if (authState.isAuthenticated) {
-                item {
-                    Spacer(modifier = Modifier.height(8.dp))
-                    SectionHeader(title = "Account")
+            // Connection Options
+            SectionHeader(title = "Connection Options")
+            Spacer(modifier = Modifier.height(8.dp))
+            SettingsToggleItem(
+                title = "Auto-Connect",
+                icon = Icons.Default.PowerSettingsNew,
+                checked = uiState.settings.autoConnect,
+                onCheckedChange = viewModel::updateAutoConnect
+            )
+            Spacer(modifier = Modifier.height(16.dp))
+            ProtocolSelector(
+                selectedProtocol = selectedProtocol,
+                onProtocolSelected = {
+                    selectedProtocol = it
+                    viewModel.updatePreferredProtocol(it)
                 }
+            )
 
-                // Subscription Management Card
-                item {
-                    SubscriptionCard(
-                        isPremiumUser = authState.isPremiumUser,
-                        subscriptionTier = authState.subscriptionTier,
-                        onTogglePremium = { authViewModel.togglePremiumStatus() }
-                    )
-                }
+            Spacer(modifier = Modifier.height(24.dp))
 
-                // User Info Card
-                item {
-                    Card(
-                        modifier = Modifier.fillMaxWidth(),
-                        colors = CardDefaults.cardColors(
-                            containerColor = BackgroundSecondary
-                        )
-                    ) {
-                        Column(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(16.dp),
-                            verticalArrangement = Arrangement.spacedBy(8.dp)
-                        ) {
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.spacedBy(12.dp)
-                            ) {
-                                Icon(
-                                    Icons.Default.AccountCircle,
-                                    contentDescription = null,
-                                    tint = CyanPrimary,
-                                    modifier = Modifier.size(24.dp)
-                                )
-                                Column {
-                                    Text(
-                                        text = authState.currentUser?.name ?: "User",
-                                        fontSize = 16.sp,
-                                        fontWeight = FontWeight.SemiBold,
-                                        color = TextPrimary
-                                    )
-                                    Text(
-                                        text = authState.currentUser?.email ?: "",
-                                        fontSize = 14.sp,
-                                        color = TextSecondary
-                                    )
-                                }
-                            }
-                        }
-                    }
-                }
-
-                item {
-                    Button(
-                        onClick = {
-                            authViewModel.logout()
-                            onNavigateToLogin()
-                        },
-                        modifier = Modifier.fillMaxWidth(),
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = StatusDisconnected,
-                            contentColor = TextPrimary
-                        )
-                    ) {
-                        Icon(
-                            Icons.Default.Logout,
-                            contentDescription = "Logout"
-                        )
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Text("Logout")
-                    }
-                }
-            }
-
-            item { Spacer(modifier = Modifier.height(16.dp)) }
+            // Advanced
+            SectionHeader(title = "Advanced")
+            Spacer(modifier = Modifier.height(8.dp))
+            SettingsToggleItem(
+                title = "Send Diagnostic Logs",
+                icon = Icons.Default.Warning,
+                checked = false, // Add to settings
+                onCheckedChange = {}
+            )
+            Spacer(modifier = Modifier.height(8.dp))
+            SettingsItem(
+                title = "About SynapseGuard",
+                icon = Icons.Default.Storage,
+                onClick = { /* TODO */ }
+            )
+            Spacer(modifier = Modifier.height(32.dp))
         }
     }
 }
@@ -255,163 +154,86 @@ fun SettingsScreen(
 private fun SectionHeader(title: String) {
     Text(
         text = title,
-        fontSize = 18.sp,
-        fontWeight = FontWeight.Bold,
-        color = TextPrimary,
-        modifier = Modifier.padding(top = 8.dp, bottom = 4.dp)
+        fontSize = 16.sp,
+        fontWeight = FontWeight.SemiBold,
+        color = TextPrimary.copy(alpha = 0.7f),
+        modifier = Modifier.padding(start = 8.dp)
     )
 }
 
 @Composable
-private fun ProtocolSelectionCard(
-    currentProtocol: String,
-    onProtocolClick: () -> Unit
-) {
-    Card(
+private fun SettingsItem(title: String, icon: ImageVector, onClick: () -> Unit) {
+    Row(
         modifier = Modifier
             .fillMaxWidth()
-            .clickable { onProtocolClick() },
-        colors = CardDefaults.cardColors(
-            containerColor = BackgroundSecondary
-        )
+            .clickable { onClick() }
+            .padding(vertical = 12.dp, horizontal = 8.dp),
+        verticalAlignment = Alignment.CenterVertically
     ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp),
-            horizontalArrangement = Arrangement.spacedBy(12.dp)
-        ) {
-            Icon(
-                Icons.Default.Psychology,
-                contentDescription = null,
-                tint = CyanPrimary,
-                modifier = Modifier.size(24.dp)
-            )
-
-            Column(modifier = Modifier.weight(1f)) {
-                Text(
-                    text = "VPN Protocol",
-                    fontSize = 16.sp,
-                    fontWeight = FontWeight.Medium,
-                    color = TextPrimary
-                )
-                Text(
-                    text = "Current: $currentProtocol",
-                    fontSize = 14.sp,
-                    color = TextSecondary
-                )
-            }
-
-            Icon(
-                Icons.Default.ChevronRight,
-                contentDescription = null,
-                tint = IconSecondary
-            )
-        }
+        Icon(icon, contentDescription = null, tint = CyanPrimary, modifier = Modifier.size(24.dp))
+        Spacer(modifier = Modifier.width(16.dp))
+        Text(title, color = TextPrimary, fontSize = 16.sp)
     }
 }
 
 @Composable
-private fun SubscriptionCard(
-    isPremiumUser: Boolean,
-    subscriptionTier: SubscriptionTier,
-    onTogglePremium: () -> Unit
+private fun ProtocolSelector(
+    selectedProtocol: VpnProtocol,
+    onProtocolSelected: (VpnProtocol) -> Unit
 ) {
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(
-            containerColor = if (isPremiumUser) {
-                BackgroundAccent.copy(alpha = 0.2f)
-            } else {
-                BackgroundSecondary
-            }
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(IntrinsicSize.Min),
+        horizontalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        ProtocolButton(
+            text = "OpenVPN",
+            isSelected = selectedProtocol == VpnProtocol.OpenVPN,
+            onClick = { onProtocolSelected(VpnProtocol.OpenVPN) },
+            modifier = Modifier.weight(1f)
+        )
+        ProtocolButton(
+            text = "WireGuard",
+            isSelected = selectedProtocol == VpnProtocol.WireGuard,
+            onClick = { onProtocolSelected(VpnProtocol.WireGuard) },
+            modifier = Modifier.weight(1f)
+        )
+    }
+}
+
+@Composable
+private fun ProtocolButton(
+    text: String,
+    isSelected: Boolean,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    OutlinedButton(
+        onClick = onClick,
+        modifier = modifier.fillMaxHeight(),
+        shape = MaterialTheme.shapes.medium,
+        colors = ButtonDefaults.outlinedButtonColors(
+            containerColor = if (isSelected) CyanPrimary.copy(alpha = 0.2f) else Color.Transparent,
+            contentColor = if (isSelected) CyanPrimary else TextPrimary.copy(alpha = 0.8f)
+        ),
+        border = BorderStroke(
+            1.dp,
+            if (isSelected) CyanPrimary else TextPrimary.copy(alpha = 0.3f)
         )
     ) {
         Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp)
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
         ) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Row(
-                    horizontalArrangement = Arrangement.spacedBy(12.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Icon(
-                        if (isPremiumUser) Icons.Default.WorkspacePremium else Icons.Default.StarBorder,
-                        contentDescription = null,
-                        tint = if (isPremiumUser) IconYellow else IconSecondary,
-                        modifier = Modifier.size(32.dp)
-                    )
-                    Column {
-                        Text(
-                            text = if (isPremiumUser) "Premium User" else "Free User",
-                            fontSize = 18.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = if (isPremiumUser) IconYellow else TextPrimary
-                        )
-                        Text(
-                            text = "Current: ${subscriptionTier.name}",
-                            fontSize = 14.sp,
-                            color = TextSecondary
-                        )
-                    }
-                }
-
-                // Demo toggle switch
-                Switch(
-                    checked = isPremiumUser,
-                    onCheckedChange = { onTogglePremium() },
-                    colors = SwitchDefaults.colors(
-                        checkedThumbColor = IconYellow,
-                        checkedTrackColor = IconYellow.copy(alpha = 0.5f),
-                        uncheckedThumbColor = IconSecondary,
-                        uncheckedTrackColor = BackgroundCard
-                    )
-                )
-            }
-
-            if (!isPremiumUser) {
-                Divider(color = DividerColor)
-
-                Button(
-                    onClick = { /* TODO: Navigate to subscription/purchase screen */ },
-                    modifier = Modifier.fillMaxWidth(),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = IconYellow,
-                        contentColor = BackgroundPrimary
-                    )
-                ) {
-                    Icon(
-                        Icons.Default.Stars,
-                        contentDescription = null
-                    )
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text(
-                        text = "Upgrade to Premium",
-                        fontWeight = FontWeight.Bold
-                    )
-                }
-
-                Text(
-                    text = "• Access to all premium servers\n• Priority connection speeds\n• Advanced security features\n• No ads",
-                    fontSize = 12.sp,
-                    color = TextSecondary,
-                    modifier = Modifier.padding(top = 4.dp)
-                )
-            } else {
-                Text(
-                    text = "✓ Premium features unlocked",
-                    fontSize = 14.sp,
-                    color = StatusConnected,
-                    fontWeight = FontWeight.Medium
-                )
-            }
+            // Placeholder for protocol icon
+            Icon(
+                if (text == "OpenVPN") Icons.Default.Info else Icons.Default.Security,
+                contentDescription = null,
+                modifier = Modifier.size(28.dp)
+            )
+            Spacer(modifier = Modifier.height(4.dp))
+            Text(text, fontWeight = FontWeight.SemiBold)
         }
     }
 }

@@ -130,9 +130,27 @@ class ServerRepositoryImpl @Inject constructor(
                 val baseLatency = when {
                     serverEntity.country.contains("Germany") ||
                     serverEntity.country.contains("France") ||
-                    serverEntity.country.contains("United Kingdom") -> Random.nextInt(20, 60)
+                    serverEntity.country.contains("Netherlands") ||
+                    serverEntity.country.contains("Switzerland") ||
+                    serverEntity.country.contains("Belgium") -> Random.nextInt(20, 60)
+                    serverEntity.country.contains("United Kingdom") ||
+                    serverEntity.country.contains("Ireland") ||
+                    serverEntity.country.contains("Sweden") ||
+                    serverEntity.country.contains("Norway") ||
+                    serverEntity.country.contains("Denmark") ||
+                    serverEntity.country.contains("Finland") -> Random.nextInt(30, 70)
                     serverEntity.country.contains("United States") ||
                     serverEntity.country.contains("Canada") -> Random.nextInt(80, 150)
+                    serverEntity.country.contains("Spain") ||
+                    serverEntity.country.contains("Italy") ||
+                    serverEntity.country.contains("Portugal") ||
+                    serverEntity.country.contains("Austria") ||
+                    serverEntity.country.contains("Poland") -> Random.nextInt(40, 90)
+                    serverEntity.country.contains("Japan") ||
+                    serverEntity.country.contains("South Korea") ||
+                    serverEntity.country.contains("Singapore") ||
+                    serverEntity.country.contains("Hong Kong") -> Random.nextInt(150, 250)
+                    serverEntity.country.contains("Australia") -> Random.nextInt(200, 300)
                     else -> Random.nextInt(100, 250) // Far away servers
                 }
 
