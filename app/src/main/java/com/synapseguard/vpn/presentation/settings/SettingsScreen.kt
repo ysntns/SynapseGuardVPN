@@ -8,8 +8,10 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material.icons.filled.Dns
 import androidx.compose.material.icons.filled.Info
+import androidx.compose.material.icons.filled.Language
 import androidx.compose.material.icons.filled.PowerSettingsNew
 import androidx.compose.material.icons.filled.Security
 import androidx.compose.material.icons.filled.Splitscreen
@@ -33,10 +35,13 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.synapseguard.vpn.domain.model.VpnProtocol
 import com.synapseguard.vpn.presentation.components.SettingsToggleItem
+import com.synapseguard.vpn.presentation.theme.BackgroundCard
 import com.synapseguard.vpn.presentation.theme.BackgroundPrimary
+import com.synapseguard.vpn.presentation.theme.BackgroundSecondary
 import com.synapseguard.vpn.presentation.theme.CyanPrimary
 import com.synapseguard.vpn.presentation.theme.IconRed
 import com.synapseguard.vpn.presentation.theme.TextPrimary
+import com.synapseguard.vpn.presentation.theme.TextSecondary
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -48,6 +53,16 @@ fun SettingsScreen(
 ) {
     val uiState by viewModel.uiState.collectAsState()
     var selectedProtocol by remember { mutableStateOf(uiState.settings.preferredProtocol) }
+    var selectedLanguage by remember { mutableStateOf("English") }
+    var showLanguageDialog by remember { mutableStateOf(false) }
+
+    val languages = listOf(
+        "English" to "English",
+        "Türkçe" to "Turkish",
+        "Deutsch" to "German",
+        "Français" to "French",
+        "Español" to "Spanish"
+    )
 
     Scaffold(
         containerColor = BackgroundPrimary,
@@ -136,6 +151,16 @@ fun SettingsScreen(
 
             Spacer(modifier = Modifier.height(24.dp))
 
+            // Language
+            SectionHeader(title = "Language")
+            Spacer(modifier = Modifier.height(8.dp))
+            LanguageSelector(
+                selectedLanguage = selectedLanguage,
+                onClick = { showLanguageDialog = true }
+            )
+
+            Spacer(modifier = Modifier.height(24.dp))
+
             // Advanced
             SectionHeader(title = "Advanced")
             Spacer(modifier = Modifier.height(8.dp))
@@ -153,6 +178,105 @@ fun SettingsScreen(
                 onClick = { /* TODO */ }
             )
             Spacer(modifier = Modifier.height(32.dp))
+        }
+    }
+
+    // Language selection dialog
+    if (showLanguageDialog) {
+        AlertDialog(
+            onDismissRequest = { showLanguageDialog = false },
+            title = {
+                Text("Select Language", color = TextPrimary)
+            },
+            text = {
+                Column {
+                    languages.forEach { (displayName, _) ->
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clickable {
+                                    selectedLanguage = displayName
+                                    showLanguageDialog = false
+                                }
+                                .padding(vertical = 12.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            RadioButton(
+                                selected = selectedLanguage == displayName,
+                                onClick = {
+                                    selectedLanguage = displayName
+                                    showLanguageDialog = false
+                                },
+                                colors = RadioButtonDefaults.colors(
+                                    selectedColor = CyanPrimary,
+                                    unselectedColor = TextSecondary
+                                )
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text(displayName, color = TextPrimary, fontSize = 16.sp)
+                        }
+                    }
+                }
+            },
+            confirmButton = {
+                TextButton(onClick = { showLanguageDialog = false }) {
+                    Text("Cancel", color = CyanPrimary)
+                }
+            },
+            containerColor = BackgroundSecondary
+        )
+    }
+}
+
+@Composable
+private fun LanguageSelector(
+    selectedLanguage: String,
+    onClick: () -> Unit
+) {
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable { onClick() },
+        colors = CardDefaults.cardColors(
+            containerColor = BackgroundCard
+        )
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Icon(
+                    Icons.Default.Language,
+                    contentDescription = null,
+                    tint = CyanPrimary,
+                    modifier = Modifier.size(24.dp)
+                )
+                Column {
+                    Text(
+                        text = "App Language",
+                        fontSize = 16.sp,
+                        fontWeight = FontWeight.Medium,
+                        color = TextPrimary
+                    )
+                    Text(
+                        text = selectedLanguage,
+                        fontSize = 14.sp,
+                        color = TextSecondary
+                    )
+                }
+            }
+            Icon(
+                Icons.Default.ChevronRight,
+                contentDescription = null,
+                tint = TextSecondary
+            )
         }
     }
 }
