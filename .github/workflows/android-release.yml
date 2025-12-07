@@ -47,16 +47,16 @@ jobs:
       - name: Prepare signing config (Release only)
         if: steps.build_type.outputs.type == 'release'
         env:
-          RELEASE_KEYSTORE_BASE64: ${{ secrets.RELEASE_KEYSTORE_BASE64 }}
-          RELEASE_STORE_PASSWORD: ${{ secrets.RELEASE_STORE_PASSWORD }}
-          RELEASE_KEY_ALIAS: ${{ secrets.RELEASE_KEY_ALIAS }}
-          RELEASE_KEY_PASSWORD: ${{ secrets.RELEASE_KEY_PASSWORD }}
+          KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
+          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
         run: |
           missing_secrets=()
-          [ -z "$RELEASE_KEYSTORE_BASE64" ] && missing_secrets+=("RELEASE_KEYSTORE_BASE64")
-          [ -z "$RELEASE_STORE_PASSWORD" ] && missing_secrets+=("RELEASE_STORE_PASSWORD")
-          [ -z "$RELEASE_KEY_ALIAS" ] && missing_secrets+=("RELEASE_KEY_ALIAS")
-          [ -z "$RELEASE_KEY_PASSWORD" ] && missing_secrets+=("RELEASE_KEY_PASSWORD")
+          [ -z "$KEYSTORE_BASE64" ] && missing_secrets+=("KEYSTORE_BASE64")
+          [ -z "$KEYSTORE_PASSWORD" ] && missing_secrets+=("KEYSTORE_PASSWORD")
+          [ -z "$KEY_ALIAS" ] && missing_secrets+=("KEY_ALIAS")
+          [ -z "$KEY_PASSWORD" ] && missing_secrets+=("KEY_PASSWORD")
 
           if [ ${#missing_secrets[@]} -ne 0 ]; then
             printf 'Missing required secrets: %s\n' "${missing_secrets[*]}" >&2
@@ -64,13 +64,13 @@ jobs:
           fi
 
           mkdir -p .signing
-          echo "$RELEASE_KEYSTORE_BASE64" | base64 --decode > .signing/release.keystore
+          echo "$KEYSTORE_BASE64" | base64 --decode > .signing/release.keystore
 
           {
             echo "releaseStoreFile=${GITHUB_WORKSPACE}/.signing/release.keystore"
-            echo "releaseStorePassword=${RELEASE_STORE_PASSWORD}"
-            echo "releaseKeyAlias=${RELEASE_KEY_ALIAS}"
-            echo "releaseKeyPassword=${RELEASE_KEY_PASSWORD}"
+            echo "releaseStorePassword=${KEYSTORE_PASSWORD}"
+            echo "releaseKeyAlias=${KEY_ALIAS}"
+            echo "releaseKeyPassword=${KEY_PASSWORD}"
           } >> gradle.properties
         shell: bash
 
