@@ -1,8 +1,10 @@
 package com.synapseguard.vpn.presentation.components
 
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.WorkspacePremium
@@ -10,6 +12,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -22,7 +25,7 @@ fun ServerListItem(
     isSelected: Boolean,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
-    canAccess: Boolean = true // Whether user can access this server (for premium restrictions)
+    canAccess: Boolean = true
 ) {
     Card(
         modifier = modifier
@@ -31,6 +34,7 @@ fun ServerListItem(
                 enabled = canAccess,
                 onClick = onClick
             ),
+        shape = RoundedCornerShape(12.dp),
         colors = CardDefaults.cardColors(
             containerColor = if (isSelected) {
                 SurfaceSelected
@@ -41,7 +45,7 @@ fun ServerListItem(
             }
         ),
         border = if (isSelected) {
-            BorderStroke(2.dp, BorderAccent)
+            BorderStroke(2.dp, CyanPrimary)
         } else if (server.isPremium && !canAccess) {
             BorderStroke(1.dp, IconYellow.copy(alpha = 0.5f))
         } else {
@@ -51,7 +55,7 @@ fun ServerListItem(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(16.dp),
+                .padding(12.dp),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
@@ -61,11 +65,19 @@ fun ServerListItem(
                 verticalAlignment = Alignment.CenterVertically,
                 modifier = Modifier.weight(1f)
             ) {
-                // Country flag placeholder (will be replaced with actual flag)
-                Text(
-                    text = getFlagEmoji(server.countryCode),
-                    fontSize = 32.sp
-                )
+                // Country flag with background
+                Box(
+                    modifier = Modifier
+                        .size(40.dp)
+                        .clip(RoundedCornerShape(8.dp))
+                        .background(BackgroundCard),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = getFlagEmoji(server.countryCode),
+                        fontSize = 24.sp
+                    )
+                }
 
                 Column {
                     Row(
@@ -73,60 +85,50 @@ fun ServerListItem(
                         horizontalArrangement = Arrangement.spacedBy(6.dp)
                     ) {
                         Text(
-                            text = server.city,
-                            fontSize = 16.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = if (canAccess) TextPrimary else TextSecondary
+                            text = "${server.city}, ${server.country}",
+                            fontSize = 15.sp,
+                            fontWeight = FontWeight.SemiBold,
+                            color = if (isSelected) CyanPrimary else if (canAccess) TextPrimary else TextSecondary
                         )
                         if (server.isPremium) {
                             Icon(
                                 Icons.Default.WorkspacePremium,
                                 contentDescription = "Premium Server",
                                 tint = IconYellow,
-                                modifier = Modifier.size(16.dp)
+                                modifier = Modifier.size(14.dp)
                             )
                         }
                     }
-                    Text(
-                        text = server.country,
-                        fontSize = 14.sp,
-                        color = if (canAccess) TextSecondary else TextSecondary.copy(alpha = 0.5f)
-                    )
                 }
             }
 
             // Right side: Stats + Selection indicator
             Row(
-                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                // Server load or Premium label
-                Column(
-                    horizontalAlignment = Alignment.End
-                ) {
-                    if (!canAccess && server.isPremium) {
+                if (!canAccess && server.isPremium) {
+                    // Premium locked label
+                    Text(
+                        text = "Premium",
+                        fontSize = 12.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = IconYellow
+                    )
+                } else {
+                    // Load and Ping info
+                    Column(
+                        horizontalAlignment = Alignment.End
+                    ) {
                         Text(
-                            text = "Premium",
+                            text = "Load: ${server.load}%",
                             fontSize = 12.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = IconYellow
+                            color = getLoadColor(server.load)
                         )
                         Text(
-                            text = "Locked",
-                            fontSize = 10.sp,
+                            text = "Ping: ${server.latency} ms",
+                            fontSize = 12.sp,
                             color = TextSecondary
-                        )
-                    } else {
-                        Text(
-                            text = "${server.load}%",
-                            fontSize = 14.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = if (canAccess) getLoadColor(server.load) else getLoadColor(server.load).copy(alpha = 0.5f)
-                        )
-                        Text(
-                            text = "${server.latency}ms",
-                            fontSize = 12.sp,
-                            color = if (canAccess) TextSecondary else TextSecondary.copy(alpha = 0.5f)
                         )
                     }
                 }
@@ -149,7 +151,6 @@ fun ServerListItem(
  * Get flag emoji for country code
  */
 private fun getFlagEmoji(countryCode: String): String {
-    // Convert country code to flag emoji
     return countryCode.uppercase()
         .map { char -> Character.codePointAt("$char", 0) - 0x41 + 0x1F1E6 }
         .map { codePoint -> Character.toChars(codePoint) }
