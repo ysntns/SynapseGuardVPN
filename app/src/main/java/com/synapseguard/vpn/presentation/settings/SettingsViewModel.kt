@@ -2,6 +2,7 @@ package com.synapseguard.vpn.presentation.settings
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.synapseguard.vpn.domain.model.VpnProtocol
 import com.synapseguard.vpn.domain.model.VpnSettings
 import com.synapseguard.vpn.domain.repository.SettingsRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -44,6 +45,10 @@ class SettingsViewModel @Inject constructor(
 
     fun updateSplitTunneling(enabled: Boolean) {
         updateSettings { it.copy(splitTunneling = enabled) }
+    }
+
+    fun updatePreferredProtocol(protocol: VpnProtocol) {
+        updateSettings { it.copy(preferredProtocol = protocol) }
     }
 
     private fun updateSettings(transform: (VpnSettings) -> VpnSettings) {
