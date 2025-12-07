@@ -1,6 +1,8 @@
 package com.synapseguard.vpn.presentation.settings
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -189,14 +191,14 @@ private fun ProtocolSelector(
     ) {
         ProtocolButton(
             text = "OpenVPN",
-            isSelected = selectedProtocol == VpnProtocol.OpenVPN,
-            onClick = { onProtocolSelected(VpnProtocol.OpenVPN) },
+            isSelected = selectedProtocol == VpnProtocol.OPENVPN,
+            onClick = { onProtocolSelected(VpnProtocol.OPENVPN) },
             modifier = Modifier.weight(1f)
         )
         ProtocolButton(
             text = "WireGuard",
-            isSelected = selectedProtocol == VpnProtocol.WireGuard,
-            onClick = { onProtocolSelected(VpnProtocol.WireGuard) },
+            isSelected = selectedProtocol == VpnProtocol.WIREGUARD,
+            onClick = { onProtocolSelected(VpnProtocol.WIREGUARD) },
             modifier = Modifier.weight(1f)
         )
     }
