@@ -33,13 +33,33 @@ class VpnRepositoryImpl @Inject constructor(
     private var statsMonitorJob: Job? = null
     private var currentConfig: ConnectionConfig? = null
 
+    // Demo mode - simulates VPN connection without real backend
+    private val demoMode = true
+    private var demoStatsJob: Job? = null
+
     override fun observeVpnState(): Flow<VpnState> = _vpnState.asStateFlow()
 
     override fun observeConnectionStats(): Flow<ConnectionStats> = _connectionStats.asStateFlow()
 
     override suspend fun connect(config: ConnectionConfig): Result<Unit> = withContext(ioDispatcher) {
         try {
-            // Double-check VPN permission (should already be granted by MainActivity)
+            currentConfig = config
+            Timber.d("Starting VPN connection to ${config.server.name}")
+            _vpnState.value = VpnState.Connecting
+
+            if (demoMode) {
+                // Demo mode: simulate connection
+                delay(1500) // Simulate connection delay
+                _vpnState.value = VpnState.Connected(
+                    server = config.server,
+                    connectedAt = System.currentTimeMillis()
+                )
+                startDemoStatsSimulation()
+                Timber.d("Demo VPN connected to ${config.server.name}")
+                return@withContext Result.success(Unit)
+            }
+
+            // Real VPN connection code below (requires backend)
             val prepareIntent = VpnService.prepare(context)
             if (prepareIntent != null) {
                 Timber.w("VPN permission check failed - permission not granted")
@@ -48,11 +68,6 @@ class VpnRepositoryImpl @Inject constructor(
                     SecurityException("VPN permission not granted. Please grant permission and try again.")
                 )
             }
-
-            currentConfig = config
-
-            Timber.d("Starting VPN connection to ${config.server.name}")
-            _vpnState.value = VpnState.Connecting
 
             // Start VPN service with configuration
             val serviceIntent = Intent(context, VpnConnectionService::class.java).apply {
@@ -83,7 +98,6 @@ class VpnRepositoryImpl @Inject constructor(
             } else if (_vpnState.value is VpnState.Error) {
                 Result.failure(Exception("Connection failed"))
             } else {
-                // Still connecting or timeout
                 Result.success(Unit)
             }
 
@@ -97,6 +111,18 @@ class VpnRepositoryImpl @Inject constructor(
     override suspend fun disconnect(): Result<Unit> = withContext(ioDispatcher) {
         try {
             _vpnState.value = VpnState.Disconnecting
+
+            if (demoMode) {
+                // Demo mode: simulate disconnection
+                delay(500)
+                demoStatsJob?.cancel()
+                demoStatsJob = null
+                _vpnState.value = VpnState.Idle
+                _connectionStats.value = ConnectionStats()
+                currentConfig = null
+                Timber.d("Demo VPN disconnected")
+                return@withContext Result.success(Unit)
+            }
 
             // Stop state monitoring
             stateMonitorJob?.cancel()
@@ -129,6 +155,43 @@ class VpnRepositoryImpl @Inject constructor(
 
     override suspend fun isVpnActive(): Boolean {
         return _vpnState.value is VpnState.Connected
+    }
+
+    private fun startDemoStatsSimulation() {
+        demoStatsJob?.cancel()
+        val startTime = System.currentTimeMillis()
+        demoStatsJob = repositoryScope.launch {
+            var bytesReceived = 0L
+            var bytesSent = 0L
+            var packetsReceived = 0L
+            var packetsSent = 0L
+
+            while (isActive && _vpnState.value is VpnState.Connected) {
+                delay(1000)
+
+                // Simulate realistic traffic
+                val downloadSpeed = (500_000L..2_000_000L).random() // 500KB-2MB/s
+                val uploadSpeed = (100_000L..500_000L).random() // 100KB-500KB/s
+
+                bytesReceived += downloadSpeed
+                bytesSent += uploadSpeed
+                packetsReceived += (downloadSpeed / 1500) // ~1500 bytes per packet
+                packetsSent += (uploadSpeed / 1500)
+
+                val now = System.currentTimeMillis()
+                _connectionStats.value = ConnectionStats(
+                    bytesReceived = bytesReceived,
+                    bytesSent = bytesSent,
+                    packetsReceived = packetsReceived,
+                    packetsSent = packetsSent,
+                    duration = now - startTime,
+                    timestamp = now,
+                    downloadSpeedBps = downloadSpeed,
+                    uploadSpeedBps = uploadSpeed,
+                    sessionStartTime = startTime
+                )
+            }
+        }
     }
 
     private fun startStateMonitoring(config: ConnectionConfig) {

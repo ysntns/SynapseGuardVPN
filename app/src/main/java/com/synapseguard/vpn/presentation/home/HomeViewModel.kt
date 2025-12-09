@@ -40,6 +40,9 @@ class HomeViewModel @Inject constructor(
     val uiState: StateFlow<HomeUiState> = _uiState.asStateFlow()
 
     init {
+        // Load servers and selected server
+        loadSelectedServer()
+
         // Observe VPN state
         viewModelScope.launch {
             observeVpnStateUseCase().collect { state ->
@@ -55,6 +58,33 @@ class HomeViewModel @Inject constructor(
             observeConnectionStatsUseCase().collect { stats ->
                 _uiState.value = _uiState.value.copy(connectionStats = stats)
             }
+        }
+
+        // Observe available servers for selected server updates
+        viewModelScope.launch {
+            serverRepository.availableServers.collect { servers ->
+                if (servers.isEmpty()) return@collect
+
+                val selectedId = serverRepository.getSelectedServerId()
+                if (selectedId != null) {
+                    val server = servers.find { it.id == selectedId }
+                    if (server != null) {
+                        _uiState.value = _uiState.value.copy(selectedServer = server)
+                    }
+                } else if (_uiState.value.selectedServer == null) {
+                    // Auto-select first server if none selected
+                    val firstServer = servers.first()
+                    serverRepository.saveSelectedServer(firstServer.id)
+                    _uiState.value = _uiState.value.copy(selectedServer = firstServer)
+                }
+            }
+        }
+    }
+
+    private fun loadSelectedServer() {
+        viewModelScope.launch {
+            // Ensure servers are loaded
+            serverRepository.getServers()
         }
     }
 
