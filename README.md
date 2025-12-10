@@ -1,174 +1,160 @@
 # SynapseGuard VPN
 
-Professional Android VPN application with multi-protocol support (WireGuard, OpenVPN, V2Ray)
+Cross-platform VPN application built with React Native featuring multi-protocol support (WireGuard, OpenVPN, V2Ray)
 
-![Min SDK](https://img.shields.io/badge/Min%20SDK-26-blue)
-![Target SDK](https://img.shields.io/badge/Target%20SDK-35-blue)
-![Kotlin](https://img.shields.io/badge/Kotlin-1.9.20-purple)
-![Gradle](https://img.shields.io/badge/Gradle-8.2-green)
+![React Native](https://img.shields.io/badge/React%20Native-0.76-blue)
+![TypeScript](https://img.shields.io/badge/TypeScript-5.6-blue)
+![Platform](https://img.shields.io/badge/Platform-Android-green)
 
 ## Overview
 
-SynapseGuard VPN is a modern, secure VPN application for Android built with the latest Android development practices. It features a clean architecture, modern UI with Jetpack Compose, and support for multiple VPN protocols.
+SynapseGuard VPN is a modern, secure VPN application built with React Native for cross-platform support. It features a clean architecture, beautiful dark-themed UI, and support for multiple VPN protocols through native modules.
 
 ## Features
 
-### Current UI & UX
-- ✅ Modern Material3 UI with Jetpack Compose
-- ✅ Animated Splash Screen with BCI-optimized branding
+### UI & UX
+- ✅ Modern dark theme with cyan accents (#00D9FF)
+- ✅ Animated Splash Screen
 - ✅ Statistics Screen with real-time metrics
-  - Circular speed gauge
   - Download/upload speed visualization
-  - Data usage graphs (30-day history)
-  - BCI Neural Latency monitoring
-  - Interactive speed test
-- ✅ Enhanced Home Screen with connection management
-  - Shield icon in circular connection button
-  - Status-based color changes
-  - Connection state animations
-- ✅ Server selection screen with AI-optimized suggestions
-  - 9 servers across Europe, Americas, Asia-Pacific, and Middle East
+  - Data usage tracking
+  - Session duration
+- ✅ Home Screen with circular connection button
+  - Animated connection states
+  - Real-time status display
+- ✅ Server selection screen
+  - 9 servers across Europe, Americas, Asia-Pacific
   - Real latency and load indicators
-  - Flag emojis for countries
+  - Search and sort functionality
 - ✅ Settings screen with security features
-- ✅ **Split Tunneling Screen** (NEW!)
+- ✅ Split Tunneling Screen
   - Per-app VPN bypass configuration
-  - Installed apps list with icons
   - Toggle switches for each app
   - Search functionality
-- ✅ Dark theme with cyan accents (#00D9FF)
-- ✅ Custom logo and branding assets
 
-### Architecture & Development
-- ✅ MVVM Architecture with Clean Architecture
-- ✅ Hilt Dependency Injection
-- ✅ Room Database for local storage
-- ✅ DataStore for preferences
-- ✅ Retrofit for network operations
-- ✅ Coroutines & Flow for async operations
-- ✅ Navigation Compose with multi-screen flow
+### Architecture
+- ✅ Clean Architecture with TypeScript
+- ✅ Zustand for state management
+- ✅ React Navigation for routing
+- ✅ Native Module bridge for VPN functionality
+- ✅ Type-safe codebase
 
-### VPN Protocol Support
-- ✅ **WireGuard protocol implementation** (Functional tunnel with packet forwarding)
-  - UDP channel communication
-  - Handshake protocol (ready for native library integration)
-  - Real-time packet forwarding
-  - Statistics tracking
-  - Note: Encryption layer ready for WireGuard-Android library integration
-- 🔄 OpenVPN protocol implementation (framework ready)
-- 🔄 V2Ray protocol implementation (framework ready)
+### VPN Protocol Support (Android)
+- ✅ **WireGuard protocol** (via native module)
+- 🔄 OpenVPN protocol (framework ready)
+- 🔄 V2Ray protocol (framework ready)
 
 ### Security Features
-- ✅ **Split Tunneling** (per-app VPN routing with addDisallowedApplication)
-- ✅ **Kill Switch** (system-level traffic blocking with VpnService.Builder.setBlocking)
-- ✅ **DNS Leak Protection** (custom DNS servers routed through tunnel)
-- ✅ **Traffic Statistics** (real-time upload/download monitoring)
-- ✅ **Foreground Service** (persistent notification with connection status)
-- 🔄 Auto-connect on startup
-- 🔄 Always-on VPN support
+- ✅ **Kill Switch** (system-level traffic blocking)
+- ✅ **Split Tunneling** (per-app VPN routing)
+- ✅ **DNS Leak Protection** (custom DNS servers)
+- ✅ **Traffic Statistics** (real-time monitoring)
+- ✅ **Foreground Service** (persistent notification)
 
 ## Tech Stack
 
-### Core
+### Frontend (React Native)
+- **Framework**: React Native 0.76
+- **Language**: TypeScript
+- **State Management**: Zustand
+- **Navigation**: React Navigation 7
+- **Animations**: React Native Reanimated
+- **Icons**: React Native Vector Icons
+
+### Native (Android)
 - **Language**: Kotlin
 - **Min SDK**: 26 (Android 8.0)
 - **Target SDK**: 35 (Android 15)
-- **Build System**: Gradle 8.2 with Kotlin DSL
-
-### Architecture & Patterns
-- **Architecture**: Clean Architecture (Data, Domain, Presentation)
-- **Design Pattern**: MVVM (Model-View-ViewModel)
-- **Dependency Injection**: Hilt (Dagger)
-
-### Libraries
-- **UI**: Jetpack Compose + Material3
-- **Navigation**: Navigation Compose
-- **Async**: Kotlin Coroutines + Flow
-- **Network**: Retrofit + OkHttp
-- **Local Storage**: Room Database + DataStore
-- **Logging**: Timber
+- **VPN Service**: Android VpnService API
 
 ## Project Structure
 
 ```
-app/                    # Main application module
-├── data/              # Data layer (repositories, local/remote data sources)
-├── domain/            # Domain layer (models, use cases, repository interfaces)
-├── presentation/      # Presentation layer (UI, ViewModels, navigation)
-└── di/                # Dependency injection modules
-
-vpn-service/           # VPN service module
-├── core/              # Core VPN service
-├── wireguard/         # WireGuard implementation
-├── openvpn/           # OpenVPN implementation
-└── v2ray/             # V2Ray implementation
+SynapseGuardVPN/
+├── src/
+│   ├── components/       # Reusable UI components
+│   │   ├── CircularConnectionButton.tsx
+│   │   ├── ServerListItem.tsx
+│   │   ├── StatsCard.tsx
+│   │   └── StatusCard.tsx
+│   ├── screens/          # App screens
+│   │   ├── splash/
+│   │   ├── home/
+│   │   ├── servers/
+│   │   ├── settings/
+│   │   ├── stats/
+│   │   └── splittunnel/
+│   ├── navigation/       # React Navigation setup
+│   ├── stores/           # Zustand state stores
+│   ├── services/         # Native module bridges
+│   ├── hooks/            # Custom React hooks
+│   ├── types/            # TypeScript type definitions
+│   └── theme/            # Colors, typography, spacing
+├── android/
+│   └── app/src/main/java/com/synapseguardvpn/
+│       └── vpn/          # VPN Native Module (Kotlin)
+├── App.tsx
+├── index.js
+└── package.json
 ```
-
-For detailed project structure, see [PROJECT_STRUCTURE.md](PROJECT_STRUCTURE.md)
 
 ## Getting Started
 
 ### Prerequisites
-- Android Studio Hedgehog (2023.1.1) or later
+- Node.js 18+
+- npm or yarn
+- Android Studio (for Android development)
 - JDK 17
-- Android SDK 35
 
-### Setup
+### Installation
+
 1. Clone the repository
    ```bash
    git clone https://github.com/your-username/SynapseGuardVPN.git
    cd SynapseGuardVPN
    ```
 
-2. Configure Android SDK location
-   - Copy the example configuration file:
-     ```bash
-     cp local.properties.example local.properties
-     ```
-   - Edit `local.properties` and update the `sdk.dir` path to your Android SDK location:
-     ```properties
-     # Linux/Mac example:
-     sdk.dir=/home/YOUR_USERNAME/Android/Sdk
-
-     # Windows example:
-     sdk.dir=C\\:\\Users\\YOUR_USERNAME\\AppData\\Local\\Android\\Sdk
-     ```
-   - Or create the file directly:
-     ```bash
-     echo "sdk.dir=/path/to/your/Android/Sdk" > local.properties
-     ```
-
-3. Open in Android Studio
-   - File → Open → Select the project directory
-
-4. Build the project
+2. Install dependencies
    ```bash
-   ./gradlew build
+   npm install
    ```
 
-5. Run on device/emulator
+3. Start Metro bundler
    ```bash
-   ./gradlew installDebug
+   npm start
+   ```
+
+4. Run on Android
+   ```bash
+   npm run android
    ```
 
 ## Development
 
-### Building
-```bash
-# Debug build
-./gradlew assembleDebug
+### Available Scripts
 
-# Release build
-./gradlew assembleRelease
+```bash
+# Start Metro bundler
+npm start
+
+# Run on Android
+npm run android
+
+# Run tests
+npm test
+
+# Lint code
+npm run lint
+
+# Clean Android build
+npm run clean
 ```
 
-### Testing
-```bash
-# Run unit tests
-./gradlew test
+### Building for Release
 
-# Run instrumented tests
-./gradlew connectedAndroidTest
+```bash
+cd android
+./gradlew assembleRelease
 ```
 
 ## Contributing
@@ -183,47 +169,33 @@ Contributions are welcome! Please feel free to submit a Pull Request.
 
 ## Roadmap
 
-### Version 0.6 (Current - Full UI Complete) ✅
-- [x] Animated Splash Screen
-- [x] Enhanced Home Screen with shield icon
-- [x] Statistics Screen with metrics visualization
-- [x] Server Selection Screen (9 servers)
-- [x] Settings Screen
-- [x] **Split Tunneling Screen** (NEW)
-- [x] 6-screen navigation system
-- [x] Dark theme with BCI-optimized colors
-- [x] Custom logo and branding
-
-### Version 1.0 (Current - Core VPN Functional) ✅
-- [x] **WireGuard protocol implementation**
-- [x] **Basic VPN connectivity with tunnel establishment**
-- [x] **Real-time connection statistics**
-- [x] **Kill Switch backend**
-- [x] **Split Tunneling backend** (full integration)
-- [x] **DNS Leak Protection**
-- [x] **Foreground service with notification**
-- [x] **Traffic monitoring and speed calculation**
-- [ ] Server latency testing (UI ready, backend pending)
+### Version 1.0 (Current) ✅
+- [x] React Native project setup with TypeScript
+- [x] Complete UI implementation (6 screens)
+- [x] Zustand state management
+- [x] React Navigation setup
+- [x] VPN Native Module bridge (Kotlin)
+- [x] VpnService implementation
+- [x] Kill Switch, Split Tunneling, DNS protection
 
 ### Version 1.1
-- [ ] OpenVPN support (handler framework ready)
-- [ ] V2Ray support (handler framework ready)
-- [ ] WireGuard native library integration (for production encryption)
-- [ ] Persistent VPN settings with DataStore
-- [ ] Server selection persistence
+- [ ] Real WireGuard encryption integration
+- [ ] Server latency testing
+- [ ] Persistent settings with MMKV
+- [ ] Connection history
 
 ### Version 2.0
-- [ ] V2Ray support
-- [ ] Advanced routing options
-- [ ] Per-app VPN configuration
-- [ ] AI-enhanced server selection
+- [ ] iOS support
+- [ ] OpenVPN protocol
+- [ ] V2Ray protocol
+- [ ] In-app purchases
 
 ## License
 
-[License to be determined]
+MIT License - see LICENSE file for details
 
 ## Acknowledgments
 
-- Built with modern Android development best practices
+- Built with React Native and modern development practices
+- Native VPN implementation using Android VpnService
 - Inspired by the need for secure, open-source VPN solutions
-- Thanks to the Android and Kotlin communities

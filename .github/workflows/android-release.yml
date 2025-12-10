@@ -13,6 +13,8 @@ on:
           - release
   push:
     branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
 
 jobs:
   build:
@@ -20,6 +22,12 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
 
       - name: Set up JDK
         uses: actions/setup-java@v4
@@ -32,8 +40,11 @@ jobs:
         with:
           cache-disabled: true
 
+      - name: Install Node dependencies
+        run: npm ci || npm install
+
       - name: Grant execute permission for gradlew
-        run: chmod +x gradlew
+        run: chmod +x android/gradlew
 
       - name: Determine build type
         id: build_type
@@ -71,15 +82,17 @@ jobs:
             echo "releaseStorePassword=${KEYSTORE_PASSWORD}"
             echo "releaseKeyAlias=${KEY_ALIAS}"
             echo "releaseKeyPassword=${KEY_PASSWORD}"
-          } >> gradle.properties
+          } >> android/gradle.properties
         shell: bash
 
       - name: Build Debug APK
         if: steps.build_type.outputs.type == 'debug'
+        working-directory: android
         run: ./gradlew assembleDebug --no-daemon
 
       - name: Build Release APK
         if: steps.build_type.outputs.type == 'release'
+        working-directory: android
         run: ./gradlew assembleRelease --no-daemon
 
       - name: Upload Debug APK
@@ -87,11 +100,11 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: app-debug
-          path: app/build/outputs/apk/debug/*.apk
+          path: android/app/build/outputs/apk/debug/*.apk
 
       - name: Upload Release APK
         if: steps.build_type.outputs.type == 'release'
         uses: actions/upload-artifact@v4
         with:
           name: app-release
-          path: app/build/outputs/apk/release/*.apk
+          path: android/app/build/outputs/apk/release/*.apk

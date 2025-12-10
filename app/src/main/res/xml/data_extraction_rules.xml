@@ -1,8 +1,0 @@
-<?xml version="1.0" encoding="utf-8"?>
-<data-extraction-rules>
-    <cloud-backup>
-        <!-- Exclude sensitive data from cloud backup -->
-        <exclude domain="sharedpref" path="vpn_credentials.xml" />
-        <exclude domain="database" />
-    </cloud-backup>
-</data-extraction-rules>

@@ -1,34 +1,90 @@
-# Gradle files
-.gradle/
+# OSX
+.DS_Store
+.AppleDouble
+.LSOverride
+Icon
+._*
+.Spotlight-V100
+.Trashes
+
+# Xcode
 build/
+*.pbxuser
+!default.pbxuser
+*.mode1v3
+!default.mode1v3
+*.mode2v3
+!default.mode2v3
+*.perspectivev3
+!default.perspectivev3
+xcuserdata
+*.xccheckout
+*.moved-aside
+DerivedData
+*.hmap
+*.ipa
+*.xcuserstate
+project.xcworkspace
 
-# Local configuration file (sdk path, etc)
+# Android/IntelliJ
+.idea
+.gradle
 local.properties
-
-# Log/OS Files
-*.log
-
-# Android Studio generated files and folders
+*.iml
+*.hprof
+.cxx/
+*.keystore
+!debug.keystore
 captures/
 .externalNativeBuild/
-.cxx/
 *.aab
 *.apk
 output-metadata.json
 
-# IntelliJ
-*.iml
-.idea/
-misc.xml
-deploymentTargetDropDown.xml
-render.experimental.xml
+# Node
+node_modules/
+npm-debug.log
+yarn-error.log
 
-# Keystore files
-*.jks
-*.keystore
+# Fastlane
+fastlane/report.xml
+fastlane/Preview.html
+fastlane/screenshots
+fastlane/test_output
 
-# Google Services (e.g. APIs or Firebase)
+# Bundle artifact
+*.jsbundle
+
+# Ruby / CocoaPods
+/ios/Pods/
+/vendor/bundle/
+
+# Temporary files
+*.log
+*.tmp
+*.temp
+.env
+.env.local
+.env.*.local
+
+# Metro
+.metro-health-check*
+
+# Testing
+/coverage
+
+# TypeScript
+*.tsbuildinfo
+
+# Backup
+_backup_kotlin/
+
+# Build outputs
+android/app/build/
+ios/build/
+
+# Google Services
 google-services.json
 
-# Android Profiling
-*.hprof
+# Keystore
+*.jks
