@@ -3,8 +3,10 @@ package com.synapseguardvpn.vpn
 import android.app.Activity
 import android.content.Intent
 import android.net.VpnService
+import android.util.Log
 import com.facebook.react.bridge.*
 import com.facebook.react.modules.core.DeviceEventManagerModule
+import com.wireguard.crypto.KeyPair
 
 class VpnModule(private val reactContext: ReactApplicationContext) :
     ReactContextBaseJavaModule(reactContext),
@@ -12,6 +14,7 @@ class VpnModule(private val reactContext: ReactApplicationContext) :
 
     companion object {
         const val NAME = "VpnModule"
+        private const val TAG = "VpnModule"
         private const val VPN_REQUEST_CODE = 1001
 
         // Event names
@@ -20,9 +23,33 @@ class VpnModule(private val reactContext: ReactApplicationContext) :
     }
 
     private var connectPromise: Promise? = null
+    private var pendingConfig: ReadableMap? = null
 
     init {
         reactContext.addActivityEventListener(this)
+        setupCallbacks()
+    }
+
+    private fun setupCallbacks() {
+        VpnConnectionService.onStateChanged = { state ->
+            val params = Arguments.createMap().apply {
+                putString("state", state)
+            }
+            sendEvent(EVENT_STATE_CHANGED, params)
+        }
+
+        VpnConnectionService.onStatsUpdated = { stats ->
+            val params = Arguments.createMap().apply {
+                putDouble("bytesReceived", stats.bytesReceived.toDouble())
+                putDouble("bytesSent", stats.bytesSent.toDouble())
+                putDouble("packetsReceived", stats.packetsReceived.toDouble())
+                putDouble("packetsSent", stats.packetsSent.toDouble())
+                putDouble("duration", stats.duration.toDouble())
+                putDouble("downloadSpeedBps", stats.downloadSpeedBps.toDouble())
+                putDouble("uploadSpeedBps", stats.uploadSpeedBps.toDouble())
+            }
+            sendEvent(EVENT_STATS_UPDATED, params)
+        }
     }
 
     override fun getName(): String = NAME
@@ -55,19 +82,84 @@ class VpnModule(private val reactContext: ReactApplicationContext) :
         }
     }
 
+    /**
+     * Generate a new WireGuard key pair
+     */
+    @ReactMethod
+    fun generateKeyPair(promise: Promise) {
+        try {
+            val keyPair = KeyPair()
+            val result = Arguments.createMap().apply {
+                putString("privateKey", keyPair.privateKey.toBase64())
+                putString("publicKey", keyPair.publicKey.toBase64())
+            }
+            promise.resolve(result)
+            Log.d(TAG, "Generated new key pair")
+        } catch (e: Exception) {
+            promise.reject("KEYGEN_ERROR", e.message, e)
+        }
+    }
+
+    /**
+     * Get public key from private key
+     */
+    @ReactMethod
+    fun getPublicKey(privateKey: String, promise: Promise) {
+        try {
+            val publicKey = WireGuardConfiguration.getPublicKey(privateKey)
+            promise.resolve(publicKey)
+        } catch (e: Exception) {
+            promise.reject("PUBKEY_ERROR", e.message, e)
+        }
+    }
+
+    /**
+     * Connect to VPN with WireGuard configuration
+     */
     @ReactMethod
     fun connect(config: ReadableMap, promise: Promise) {
         try {
-            val serverAddress = config.getString("serverAddress") ?: ""
-            val serverPort = config.getInt("serverPort")
-            val protocol = config.getString("protocol") ?: "wireguard"
+            // Check required fields
+            val privateKey = config.getString("privateKey")
+            val serverPublicKey = config.getString("serverPublicKey")
+            val serverEndpoint = config.getString("serverEndpoint")
 
-            // Start VPN service
+            if (privateKey.isNullOrEmpty() || serverPublicKey.isNullOrEmpty() || serverEndpoint.isNullOrEmpty()) {
+                promise.reject("CONFIG_ERROR", "Missing required WireGuard configuration: privateKey, serverPublicKey, and serverEndpoint are required")
+                return
+            }
+
+            val address = config.getString("address") ?: "10.0.0.2/32"
+            val serverPort = if (config.hasKey("serverPort")) config.getInt("serverPort") else 51820
+
+            // DNS servers
+            val dns = if (config.hasKey("dns")) {
+                val dnsArray = config.getArray("dns")
+                (0 until (dnsArray?.size() ?: 0)).mapNotNull { dnsArray?.getString(it) }.toTypedArray()
+            } else {
+                arrayOf("1.1.1.1", "1.0.0.1")
+            }
+
+            // Allowed IPs
+            val allowedIPs = if (config.hasKey("allowedIPs")) {
+                val ipsArray = config.getArray("allowedIPs")
+                (0 until (ipsArray?.size() ?: 0)).mapNotNull { ipsArray?.getString(it) }.toTypedArray()
+            } else {
+                arrayOf("0.0.0.0/0", "::/0")
+            }
+
+            Log.d(TAG, "Connecting to $serverEndpoint:$serverPort")
+
+            // Start VPN service with WireGuard config
             val intent = Intent(reactContext, VpnConnectionService::class.java).apply {
                 action = VpnConnectionService.ACTION_CONNECT
-                putExtra(VpnConnectionService.EXTRA_SERVER_ADDRESS, serverAddress)
+                putExtra(VpnConnectionService.EXTRA_PRIVATE_KEY, privateKey)
+                putExtra(VpnConnectionService.EXTRA_ADDRESS, address)
+                putExtra(VpnConnectionService.EXTRA_DNS, dns)
+                putExtra(VpnConnectionService.EXTRA_SERVER_PUBLIC_KEY, serverPublicKey)
+                putExtra(VpnConnectionService.EXTRA_SERVER_ENDPOINT, serverEndpoint)
                 putExtra(VpnConnectionService.EXTRA_SERVER_PORT, serverPort)
-                putExtra(VpnConnectionService.EXTRA_PROTOCOL, protocol)
+                putExtra(VpnConnectionService.EXTRA_ALLOWED_IPS, allowedIPs)
             }
 
             if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
@@ -78,6 +170,7 @@ class VpnModule(private val reactContext: ReactApplicationContext) :
 
             promise.resolve(true)
         } catch (e: Exception) {
+            Log.e(TAG, "Connect error: ${e.message}", e)
             promise.reject("CONNECT_ERROR", e.message, e)
         }
     }
@@ -169,7 +262,7 @@ class VpnModule(private val reactContext: ReactApplicationContext) :
     }
 
     // Send events to JavaScript
-    fun sendEvent(eventName: String, params: WritableMap?) {
+    private fun sendEvent(eventName: String, params: WritableMap?) {
         reactContext
             .getJSModule(DeviceEventManagerModule.RCTDeviceEventEmitter::class.java)
             .emit(eventName, params)

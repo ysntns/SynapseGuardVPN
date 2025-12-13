@@ -1,14 +1,24 @@
 import {NativeModules, NativeEventEmitter, Platform} from 'react-native';
-import type {VpnServer, ConnectionStats, VpnStateType} from '../types/vpn';
+import type {
+  VpnServer,
+  ConnectionStats,
+  VpnStateType,
+  WireGuardConfig,
+  KeyPair,
+} from '../types/vpn';
 
 const {VpnModule} = NativeModules;
 
 interface VpnModuleInterface {
   prepare(): Promise<boolean>;
   connect(config: {
-    serverAddress: string;
+    privateKey: string;
+    address: string;
+    dns: string[];
+    serverPublicKey: string;
+    serverEndpoint: string;
     serverPort: number;
-    protocol: string;
+    allowedIPs: string[];
   }): Promise<boolean>;
   disconnect(): Promise<boolean>;
   getConnectionState(): Promise<VpnStateType>;
@@ -16,14 +26,15 @@ interface VpnModuleInterface {
   setKillSwitch(enabled: boolean): Promise<boolean>;
   setSplitTunneling(enabled: boolean, excludedApps: string[]): Promise<boolean>;
   setCustomDns(dnsServers: string[]): Promise<boolean>;
+  generateKeyPair(): Promise<KeyPair>;
+  getPublicKey(privateKey: string): Promise<string>;
 }
 
 const vpnModule = VpnModule as VpnModuleInterface;
 
 // Event emitter for VPN events
-const vpnEventEmitter = Platform.OS === 'android'
-  ? new NativeEventEmitter(VpnModule)
-  : null;
+const vpnEventEmitter =
+  Platform.OS === 'android' ? new NativeEventEmitter(VpnModule) : null;
 
 export type VpnStateListener = (state: VpnStateType) => void;
 export type VpnStatsListener = (stats: ConnectionStats) => void;
@@ -33,6 +44,7 @@ class VpnServiceClass {
   private statsListeners: Set<VpnStatsListener> = new Set();
   private stateSubscription: any = null;
   private statsSubscription: any = null;
+  private clientKeyPair: KeyPair | null = null;
 
   constructor() {
     this.setupEventListeners();
@@ -68,9 +80,34 @@ class VpnServiceClass {
   }
 
   /**
-   * Connect to a VPN server
+   * Generate a new WireGuard key pair for this client
    */
-  async connect(server: VpnServer): Promise<boolean> {
+  async generateKeyPair(): Promise<KeyPair> {
+    if (Platform.OS !== 'android') {
+      throw new Error('VPN is only supported on Android');
+    }
+    const keyPair = await vpnModule.generateKeyPair();
+    this.clientKeyPair = keyPair;
+    return keyPair;
+  }
+
+  /**
+   * Get or generate client key pair
+   */
+  async getClientKeyPair(): Promise<KeyPair> {
+    if (this.clientKeyPair) {
+      return this.clientKeyPair;
+    }
+    return this.generateKeyPair();
+  }
+
+  /**
+   * Connect to a VPN server with WireGuard
+   */
+  async connect(
+    server: VpnServer,
+    clientPrivateKey?: string,
+  ): Promise<boolean> {
     if (Platform.OS !== 'android') {
       console.warn('VPN is only supported on Android');
       return false;
@@ -82,10 +119,50 @@ class VpnServiceClass {
       throw new Error('VPN permission denied');
     }
 
-    return vpnModule.connect({
-      serverAddress: server.ipAddress,
+    // Get client key pair
+    let privateKey = clientPrivateKey;
+    if (!privateKey) {
+      const keyPair = await this.getClientKeyPair();
+      privateKey = keyPair.privateKey;
+    }
+
+    // Build WireGuard config
+    const config = {
+      privateKey: privateKey,
+      address: '10.0.0.2/32',
+      dns: ['1.1.1.1', '1.0.0.1'],
+      serverPublicKey: server.publicKey,
+      serverEndpoint: server.endpoint || server.ipAddress,
       serverPort: server.port,
-      protocol: server.protocol,
+      allowedIPs: ['0.0.0.0/0', '::/0'],
+    };
+
+    console.log('Connecting to:', server.name, server.endpoint || server.ipAddress);
+    return vpnModule.connect(config);
+  }
+
+  /**
+   * Connect with full WireGuard configuration
+   */
+  async connectWithConfig(config: WireGuardConfig): Promise<boolean> {
+    if (Platform.OS !== 'android') {
+      console.warn('VPN is only supported on Android');
+      return false;
+    }
+
+    const prepared = await this.prepare();
+    if (!prepared) {
+      throw new Error('VPN permission denied');
+    }
+
+    return vpnModule.connect({
+      privateKey: config.privateKey,
+      address: config.address,
+      dns: config.dns,
+      serverPublicKey: config.serverPublicKey,
+      serverEndpoint: config.serverEndpoint,
+      serverPort: config.serverPort,
+      allowedIPs: config.allowedIPs,
     });
   }
 

@@ -25,6 +25,27 @@ export interface VpnServer {
   load: number;
   isPremium: boolean;
   flag: string;
+  // WireGuard specific
+  publicKey: string;
+  endpoint?: string;
+}
+
+// WireGuard Configuration
+export interface WireGuardConfig {
+  privateKey: string;
+  publicKey: string;
+  address: string;
+  dns: string[];
+  serverPublicKey: string;
+  serverEndpoint: string;
+  serverPort: number;
+  allowedIPs: string[];
+}
+
+// Key Pair
+export interface KeyPair {
+  privateKey: string;
+  publicKey: string;
 }
 
 // Connection Statistics

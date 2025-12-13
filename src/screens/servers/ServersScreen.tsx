@@ -1,4 +1,4 @@
-import React, {useState, useMemo} from 'react';
+import React, {useState, useMemo, useCallback} from 'react';
 import {
   View,
   Text,
@@ -7,6 +7,7 @@ import {
   TextInput,
   TouchableOpacity,
   StatusBar,
+  Alert,
 } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import {ServerListItem} from '../../components';
@@ -14,138 +15,10 @@ import {useVpnStore} from '../../stores';
 import {colors, typography, spacing, borderRadius} from '../../theme';
 import type {MainTabScreenProps} from '../../types/navigation';
 import type {VpnServer} from '../../types/vpn';
+import {VpnService} from '../../services/VpnService';
+import {VPN_SERVERS, isServerConfigured} from '../../config/servers';
 
 type Props = MainTabScreenProps<'Servers'>;
-
-// Mock server data
-const MOCK_SERVERS: VpnServer[] = [
-  {
-    id: '1',
-    name: 'Germany',
-    country: 'Germany',
-    countryCode: 'DE',
-    city: 'Frankfurt',
-    ipAddress: '185.244.214.1',
-    port: 51820,
-    protocol: 'wireguard',
-    latency: 25,
-    load: 45,
-    isPremium: false,
-    flag: '🇩🇪',
-  },
-  {
-    id: '2',
-    name: 'Netherlands',
-    country: 'Netherlands',
-    countryCode: 'NL',
-    city: 'Amsterdam',
-    ipAddress: '185.244.214.2',
-    port: 51820,
-    protocol: 'wireguard',
-    latency: 30,
-    load: 62,
-    isPremium: false,
-    flag: '🇳🇱',
-  },
-  {
-    id: '3',
-    name: 'United States',
-    country: 'United States',
-    countryCode: 'US',
-    city: 'New York',
-    ipAddress: '185.244.214.3',
-    port: 51820,
-    protocol: 'wireguard',
-    latency: 85,
-    load: 78,
-    isPremium: false,
-    flag: '🇺🇸',
-  },
-  {
-    id: '4',
-    name: 'United Kingdom',
-    country: 'United Kingdom',
-    countryCode: 'GB',
-    city: 'London',
-    ipAddress: '185.244.214.4',
-    port: 51820,
-    protocol: 'wireguard',
-    latency: 35,
-    load: 55,
-    isPremium: false,
-    flag: '🇬🇧',
-  },
-  {
-    id: '5',
-    name: 'Japan',
-    country: 'Japan',
-    countryCode: 'JP',
-    city: 'Tokyo',
-    ipAddress: '185.244.214.5',
-    port: 51820,
-    protocol: 'wireguard',
-    latency: 120,
-    load: 40,
-    isPremium: true,
-    flag: '🇯🇵',
-  },
-  {
-    id: '6',
-    name: 'Singapore',
-    country: 'Singapore',
-    countryCode: 'SG',
-    city: 'Singapore',
-    ipAddress: '185.244.214.6',
-    port: 51820,
-    protocol: 'wireguard',
-    latency: 95,
-    load: 35,
-    isPremium: true,
-    flag: '🇸🇬',
-  },
-  {
-    id: '7',
-    name: 'Australia',
-    country: 'Australia',
-    countryCode: 'AU',
-    city: 'Sydney',
-    ipAddress: '185.244.214.7',
-    port: 51820,
-    protocol: 'wireguard',
-    latency: 180,
-    load: 25,
-    isPremium: false,
-    flag: '🇦🇺',
-  },
-  {
-    id: '8',
-    name: 'Canada',
-    country: 'Canada',
-    countryCode: 'CA',
-    city: 'Toronto',
-    ipAddress: '185.244.214.8',
-    port: 51820,
-    protocol: 'wireguard',
-    latency: 90,
-    load: 50,
-    isPremium: false,
-    flag: '🇨🇦',
-  },
-  {
-    id: '9',
-    name: 'Turkey',
-    country: 'Turkey',
-    countryCode: 'TR',
-    city: 'Istanbul',
-    ipAddress: '185.244.214.9',
-    port: 51820,
-    protocol: 'wireguard',
-    latency: 45,
-    load: 30,
-    isPremium: false,
-    flag: '🇹🇷',
-  },
-];
 
 type SortOption = 'name' | 'latency' | 'load';
 
@@ -156,7 +29,7 @@ export const ServersScreen: React.FC<Props> = ({navigation}) => {
   const [sortBy, setSortBy] = useState<SortOption>('latency');
 
   const filteredServers = useMemo(() => {
-    let servers = MOCK_SERVERS.filter(
+    let servers = VPN_SERVERS.filter(
       server =>
         server.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
         server.city.toLowerCase().includes(searchQuery.toLowerCase()),
@@ -179,24 +52,50 @@ export const ServersScreen: React.FC<Props> = ({navigation}) => {
     return servers;
   }, [searchQuery, sortBy]);
 
-  const handleServerPress = (server: VpnServer) => {
-    selectServer(server);
+  const handleServerPress = useCallback(
+    async (server: VpnServer) => {
+      // Check if server is properly configured
+      if (!isServerConfigured(server)) {
+        Alert.alert(
+          'Server Not Configured',
+          'This server is not configured yet. Please update src/config/servers.ts with your WireGuard server details.\n\nSee WIREGUARD_SETUP.md for instructions.',
+          [{text: 'OK'}],
+        );
+        return;
+      }
 
-    // If not connected, connect to the selected server
-    if (vpnState.status === 'idle') {
-      setVpnStatus('connecting');
-      setTimeout(() => {
-        setConnectedServer(server);
-        navigation.navigate('Home');
-      }, 2000);
-    } else if (vpnState.status === 'connected') {
-      // Switch server
-      setVpnStatus('connecting');
-      setTimeout(() => {
-        setConnectedServer(server);
-      }, 1500);
-    }
-  };
+      selectServer(server);
+
+      // If not connected or already connected, connect to the selected server
+      if (vpnState.status === 'idle' || vpnState.status === 'connected') {
+        // Disconnect first if already connected
+        if (vpnState.status === 'connected') {
+          setVpnStatus('disconnecting');
+          await VpnService.disconnect();
+        }
+
+        setVpnStatus('connecting');
+
+        try {
+          const success = await VpnService.connect(server);
+          if (success) {
+            setConnectedServer(server);
+            navigation.navigate('Home');
+          } else {
+            setVpnStatus('error');
+            Alert.alert('Connection Failed', 'Failed to connect to the VPN server.');
+          }
+        } catch (error: any) {
+          setVpnStatus('error');
+          Alert.alert(
+            'Connection Error',
+            error.message || 'An error occurred while connecting.',
+          );
+        }
+      }
+    },
+    [vpnState.status, selectServer, setVpnStatus, setConnectedServer, navigation],
+  );
 
   const renderSortButton = (option: SortOption, label: string) => (
     <TouchableOpacity
@@ -219,7 +118,7 @@ export const ServersScreen: React.FC<Props> = ({navigation}) => {
       {/* Header */}
       <View style={styles.header}>
         <Text style={styles.headerTitle}>Servers</Text>
-        <Text style={styles.serverCount}>{MOCK_SERVERS.length} locations</Text>
+        <Text style={styles.serverCount}>{VPN_SERVERS.length} locations</Text>
       </View>
 
       {/* Search Bar */}
